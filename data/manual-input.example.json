@@ -1,0 +1,27 @@
+{
+  "_说明": "复制本文件为 data/manual-input.json 后填写。只有下面这些字段会被 update-data.mjs 采纳；未填的字段沿用 data.js 现有快照，脚本不会猜测。央行公告与银行间利率请自行核对公开来源。",
+  "policyRate": 1.25,
+  "termPremium": 10,
+  "dr001": 1.26,
+  "dr007": 1.32,
+  "r001": 1.285,
+  "r007": 1.355,
+  "chg001": -8,
+  "chg007": -5,
+  "factors": {
+    "tax": false,
+    "monthEnd": false,
+    "quarter": false,
+    "festival": false,
+    "bond": true,
+    "fiscal": false
+  },
+  "ops": [
+    { "date": "2026-11-06", "type": "7天逆回购", "amt": 2575, "due": 7720 },
+    { "date": "2026-11-05", "type": "隔夜逆回购", "amt": 2630, "due": 3725 }
+  ],
+  "market": {
+    "prevAmount": 21173.89,
+    "prevDate": "2026-11-05"
+  }
+}

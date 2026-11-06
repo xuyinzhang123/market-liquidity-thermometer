@@ -1,0 +1,31 @@
+# 备份 / 平台注入产物：含旧版代码或协作编辑标记，禁止入库
+_backup_*/
+_云端原件备份_*.html
+*.bak
+*.bak_*
+
+# 私有自动化配置与内部文档：含本机路径、平台节点 ID、专有发布命令
+automation-prompt.txt
+项目源码汇总.md
+README-项目说明与AI阅读指南.md
+*交付包.zip
+*同步包*.zip
+_P0_*
+
+# 编辑器 / 系统 / 依赖
+.DS_Store
+Thumbs.db
+desktop.ini
+node_modules/
+.vscode/
+.idea/
+*.log
+
+# 本地运行产生的中间产物（dist/online.html 作为可双击发布物保留）
+_verify*.js
+_t_*.py
+
+# 手工录入的数据：个人填写，不入库（模板 manual-input.example.json 入库）
+data/manual-input.json
+data/provenance.json
+data/*.tmp

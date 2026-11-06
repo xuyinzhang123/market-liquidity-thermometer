@@ -1,0 +1,58 @@
+name: update-data
+
+# 手动触发，不设定时调度：公开行情接口无固定 SLA，
+# 在 CI 出口 IP 上可能被限流，失败属预期，此时请在本地运行 npm run update。
+# 另外 data/manual-input.json 被 .gitignore 忽略，CI 里没有当天的人工录入，
+# 脚本会主动拒绝写入（防止把旧数据标成今天）——这也属于预期，请在本地更新。
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '数据日期 YYYY-MM-DD（留空=当天；仅接受当天，无法补录历史行情）'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 拉取行情并更新 data.js
+        env:
+          INPUT_DATE: ${{ inputs.date }}
+        run: |
+          if [ -n "$INPUT_DATE" ]; then
+            case "$INPUT_DATE" in
+              [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
+              *) echo "日期格式不合法（需 YYYY-MM-DD）" >&2; exit 1 ;;
+            esac
+            node scripts/update-data.mjs --date "$INPUT_DATE"
+          else
+            node scripts/update-data.mjs
+          fi
+
+      - name: 重新构建并验证
+        run: |
+          npm run build
+          npm test
+          npm run check
+
+      - name: 提交更新
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data.js dist/
+          if git diff --cached --quiet; then
+            echo "数据无变化，跳过提交"
+          else
+            git commit -m "chore: refresh market data snapshot"
+            git push
+          fi

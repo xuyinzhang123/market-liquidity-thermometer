@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国流动性温度计 · V0.1</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --panel:#fff; --border:#e4e7ec; --text:#1a1d21; --muted:#6b7280;
+    --blue:#1f6feb; --blue-bg:#eef5ff; --deep:#0b4fbe;
+    --green:#0a8f5b; --green-bg:#e7f7f0;
+    --red:#d5402b; --red-bg:#fdecea; --orange:#c2620a; --orange-bg:#fdf4e8;
+    --gray:#f0f2f5; --shadow:0 1px 2px rgba(16,24,40,.04),0 6px 18px rgba(16,24,40,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+       background:var(--bg);color:var(--text);line-height:1.62;padding:26px 16px 64px;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto}
+  .muted{color:var(--muted)}
+  h1{font-size:15px;font-weight:600;letter-spacing:.3px;color:var(--muted);text-align:center}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+        box-shadow:var(--shadow);padding:20px 22px;margin-bottom:16px}
+  h2{font-size:15px;font-weight:700;display:flex;align-items:center;gap:9px;margin-bottom:4px}
+  h2 .step{width:20px;height:20px;border-radius:6px;background:var(--text);color:#fff;
+           font-size:11px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 20px}
+  h2 .tag{font-size:11px;font-weight:600;color:var(--muted);background:var(--gray);
+          padding:2px 8px;border-radius:99px}
+  .lead{font-size:12.5px;color:var(--muted);margin:2px 0 14px 29px}
+
+  /* ── 温度计首屏 ── */
+  .hero{background:linear-gradient(180deg,#fff,#fbfcfe);text-align:center;padding:26px 22px 22px}
+  .hero .kicker{font-size:12px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+  .score{font-size:64px;font-weight:800;line-height:1.05;letter-spacing:-2px;
+         font-variant-numeric:tabular-nums;margin:6px 0 0}
+  .score span{font-size:18px;font-weight:500;color:var(--muted);letter-spacing:0}
+  .verdict{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:700;
+           padding:5px 14px;border-radius:99px;margin-top:8px}
+  .gauge{margin:10px auto 0;display:block}
+  .ai{max-width:660px;margin:16px auto 0;text-align:left;font-size:13.5px;color:#2f3439;
+      background:var(--gray);border-radius:10px;padding:13px 16px;position:relative}
+  .ai:before{content:"今日解读";position:absolute;top:-9px;left:14px;font-size:11px;font-weight:700;
+      background:var(--text);color:#fff;padding:1px 8px;border-radius:99px}
+
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-top:18px}
+  @media(max-width:720px){.cards{grid-template-columns:repeat(2,1fr)}}
+  .mcard{border:1px solid var(--border);border-radius:11px;padding:12px 13px;text-align:left;background:#fff}
+  .mcard .t{font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;gap:4px}
+  .mcard .v{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:3px;
+            display:flex;align-items:baseline;gap:5px}
+  .mcard .d{font-size:11.5px;margin-top:2px}
+  .up{color:var(--red)} .down{color:var(--green)} .flat{color:var(--muted)}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle}
+  th{font-size:11.5px;color:var(--muted);font-weight:600;background:#fafbfc;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  td input{width:100%;border:1px solid transparent;background:transparent;border-radius:6px;
+           padding:5px 7px;font:inherit;color:var(--text);font-variant-numeric:tabular-nums}
+  td input:hover{border-color:var(--border)}
+  td input:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px var(--blue-bg)}
+  td input.num,td.num{text-align:right}
+  select{font:inherit;border:1px solid var(--border);border-radius:6px;padding:5px 6px;background:#fff;
+         color:var(--text);max-width:100%}
+  .pos{color:var(--red);font-weight:700} .neg{color:var(--green);font-weight:700}
+
+  .btn{border:1px solid var(--border);background:#fff;border-radius:8px;padding:7px 13px;font:inherit;
+       font-size:12.5px;cursor:pointer;color:var(--text)}
+  .btn:hover{background:var(--gray)}
+  .btn.primary{background:var(--text);border-color:var(--text);color:#fff}
+  .btn.primary:hover{opacity:.88}
+  .btn.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  .rowbtn{border:none;background:none;color:#c3c8cf;cursor:pointer;font-size:14px;padding:2px 6px}
+  .rowbtn:hover{color:var(--red)}
+
+  /* 评分明细 */
+  .bar{margin-bottom:11px}
+  .bar .top{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px}
+  .bar .top b{font-weight:700}
+  .track{height:8px;border-radius:99px;background:var(--gray);overflow:hidden}
+  .fill{height:100%;border-radius:99px;transition:width .45s}
+  .bar .sub{font-size:11px;color:var(--muted);margin-top:3px}
+
+  /* 日历因素 chips */
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;border:1px solid var(--border);
+       background:#fff;border-radius:99px;padding:7px 13px;cursor:pointer;user-select:none;transition:.15s}
+  .chk:hover{border-color:#c9ced6}
+  .chk input{accent-color:var(--blue);margin:0}
+  .chk.checked{background:var(--orange-bg);border-color:#f0d3ab}
+  .flags{margin-top:12px;font-size:12.5px;color:#4b5563}
+  .flags div{margin-top:4px}
+
+  /* FAQ 折叠 */
+  details{border:1px solid var(--border);border-radius:10px;padding:0;margin-bottom:9px;background:#fff}
+  details summary{cursor:pointer;padding:11px 15px;font-size:13.5px;font-weight:600;list-style:none;
+                  display:flex;justify-content:space-between;align-items:center}
+  details summary::-webkit-details-marker{display:none}
+  details summary:after{content:"＋";color:var(--muted);font-weight:400}
+  details[open] summary:after{content:"－"}
+  details .body{padding:0 15px 14px;font-size:13px;color:#4b5563}
+  .note{font-size:12.5px;color:#6b4a20;background:var(--orange-bg);border-radius:9px;padding:11px 14px;margin-top:12px}
+  .foot{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.7}
+  .toggle{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .toggle .lbl{font-size:12px;color:var(--muted)}
+
+  /* 成交额面板 */
+  .mkt-top{display:flex;gap:22px;align-items:flex-end;flex-wrap:wrap}
+  .mkt-main{flex:1;min-width:220px}
+  .mkt-main .v{font-size:38px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+  .mkt-main .v span{font-size:15px;font-weight:600;color:var(--muted)}
+  .mkt-diff{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:6px}
+  .mkt-sub{font-size:12px;color:var(--muted);margin-top:4px}
+  .mkt-side{min-width:200px;font-size:12.5px;color:#4b5563}
+  .mkt-side div{margin-bottom:5px}
+  .mkt-edit{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:16px}
+  .mkt-edit label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px}
+  .mkt-edit input{width:100%;border:1px solid var(--border);border-radius:8px;padding:7px 9px;font:inherit;
+                  font-variant-numeric:tabular-nums}
+  .live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#0a8f5b;margin-right:5px}
+
+  /* 历史回看 */
+  #historyCard{display:none}
+  #historyCard.show{display:block}
+  .hist-table tr{cursor:pointer}
+  .hist-table tr:hover{background:#fafbfc}
+  .hist-table tr.sel{background:var(--blue-bg)}
+  .hist-detail{margin-top:12px;background:var(--gray);border-radius:9px;padding:12px 14px;
+               font-size:12.8px;color:#374151}
+  .hist-detail b{color:var(--text)}
+
+  /* 状态概率统计 */
+  .stat-top{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .stat-today{flex:1;min-width:230px;background:var(--gray);border-radius:10px;padding:12px 14px;font-size:12.5px}
+  .stat-today b{font-size:15px}
+  .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media(max-width:720px){.stat-grid{grid-template-columns:1fr}}
+  .stat-box{border:1px solid var(--border);border-radius:10px;padding:12px 13px}
+  .stat-box .h{font-size:13px;font-weight:700;display:flex;justify-content:space-between}
+  .stat-box .n{font-size:11px;color:var(--muted);font-weight:400}
+  .prob{margin-top:9px;font-size:12px}
+  .prob .row{display:flex;justify-content:space-between;margin-bottom:3px}
+  .pbar{height:7px;border-radius:99px;background:var(--gray);overflow:hidden;margin-bottom:9px}
+  .pbar div{height:100%;border-radius:99px}
+  .chart-wrap{overflow-x:auto}
+  .legend{font-size:11px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>中国流动性温度计 · V0.1 原型</h1>
+
+<!-- ═════════ 首屏：温度计 ═════════ -->
+<div class="card hero">
+  <div class="kicker">今日银行间流动性</div>
+  <div class="score" id="scoreBig">--<span> / 100</span></div>
+  <div class="verdict" id="verdictPill">计算中</div>
+
+  <svg class="gauge" width="360" height="86" viewBox="0 0 360 86">
+    <defs>
+      <linearGradient id="tg" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#c8331f"/><stop offset="0.2" stop-color="#e2703a"/>
+        <stop offset="0.4" stop-color="#b8bcc2"/><stop offset="0.6" stop-color="#8fb8f0"/>
+        <stop offset="1" stop-color="#1f6feb"/>
+      </linearGradient>
+    </defs>
+    <rect x="10" y="26" width="340" height="12" rx="6" fill="url(#tg)" opacity=".92"/>
+    <g id="scale"></g>
+    <g id="needleG">
+      <polygon points="0,-7 0,7 -9,0" fill="#1a1d21" transform="translate(0,32)"/>
+    </g>
+  </svg>
+  <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);
+              max-width:360px;margin:0 auto;padding:0 4px">
+    <span>0 明显偏紧</span><span>50 中性</span><span>100 明显宽松</span>
+  </div>
+
+  <div class="ai" id="aiText">正在读取数据…</div>
+
+  <div class="cards">
+    <div class="mcard"><div class="t">央行 · 今日净投放</div>
+      <div class="v" id="cardOps">—</div><div class="d muted" id="cardOpsSub">—</div></div>
+    <div class="mcard"><div class="t">DR001 隔夜</div>
+      <div class="v" id="cardDr001">—</div><div class="d muted" id="cardDr001Sub">—</div></div>
+    <div class="mcard"><div class="t">DR007 七天</div>
+      <div class="v" id="cardDr007">—</div><div class="d muted" id="cardDr007Sub">—</div></div>
+    <div class="mcard"><div class="t">DR007 相对政策利率</div>
+      <div class="v" id="cardSpread">—</div><div class="d muted" id="cardSpreadSub">—</div></div>
+  </div>
+
+  <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+    <button class="btn" id="whyBtn">为什么是这个分数？ ▾</button>
+    <button class="btn" id="histBtn">历史回看 · 看前几天 ▾</button>
+  </div>
+</div>
+
+<!-- ═════════ 状态 → 市场表现统计 ═════════ -->
+<div class="card" id="statsCard">
+  <h2>流动性状态 → 大盘表现 <span class="tag" id="statsCount">—</span></h2>
+  <div class="lead">从 <b>2026-11-06</b> 开始每天归档一条：当天流动性评分与状态、上证涨跌幅、两市主力资金净流入/流出。慢慢累积出曲线，再看三种状态下大盘上涨与资金流入的概率。</div>
+  <div class="stat-top">
+    <div class="stat-today" id="statToday">—</div>
+    <div class="stat-today" id="statConclusion">—</div>
+  </div>
+  <div class="stat-grid" id="statGrid"></div>
+  <div style="margin-top:16px">
+    <div style="font-size:12.5px;font-weight:700;margin-bottom:6px">每日流动性评分曲线（点色 = 当日大盘涨跌）</div>
+    <div class="chart-wrap"><svg id="statChart" width="900" height="180" viewBox="0 0 900 180"></svg></div>
+    <div class="legend">
+      <span><i style="background:var(--red)"></i>大盘上涨</span>
+      <span><i style="background:var(--green)"></i>大盘下跌</span>
+      <span><i style="background:#9ca3af"></i>缺行情</span>
+      <span>↑ 资金净流入　↓ 资金净流出（标注在点旁）</span>
+    </div>
+  </div>
+  <div class="note">⚠️ 这是<b>同步统计</b>，不是预测：流动性状态与当日大盘表现互为镜像，相关性不等于因果。样本少于 5 天的状态组不给出结论；即使样本充足，也请把它当作观察记录而非投资信号。</div>
+</div>
+
+<!-- ═════════ A股成交额实时面板 ═════════ -->
+<div class="card">
+  <h2>A股两市成交额 <span class="tag" id="quoteStatus">在线行情待刷新</span></h2>
+  <div class="lead">成交额是市场活跃度/风险偏好的温度计。核心对比口径：<b>与前一交易日同一时段的累计成交额</b>相比，增加=红、减少=绿（A股习惯配色）。</div>
+  <div class="mkt-top">
+    <div class="mkt-main">
+      <div class="v" id="mktAmount">—<span> 亿元</span></div>
+      <div class="mkt-diff" id="mktDiff">—</div>
+      <div class="mkt-sub" id="mktSub">—</div>
+    </div>
+    <div class="mkt-side" id="mktSide">—</div>
+  </div>
+  <div class="mkt-edit">
+    <div><label>当前成交额（亿元，可手动填）</label><input type="number" step="0.01" id="mktInput"></div>
+    <div><label>前日同一时段累计（亿元，自动获取）</label><input type="number" step="0.01" id="mktSame"></div>
+    <div><label>前一交易日全天（亿元，收盘兜底）</label><input type="number" step="0.01" id="mktPrev"></div>
+  </div>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn primary" id="quoteRefresh">↻ 刷新实时行情</button>
+    <span class="muted" style="font-size:11.5px;align-self:center">打开时自动刷新，之后每 5 分钟刷新；同时段基准按当前时刻每分钟重算。</span>
+  </div>
+  <div class="note" id="mktCaveat">—</div>
+</div>
+
+<!-- ═════════ 第一层 ═════════ -->
+<div class="card">
+  <h2><span class="step">1</span>央行今天做了什么 <span class="tag">操作层</span></h2>
+  <div class="lead">央行通过公开市场"投放"或"到期回收"资金。这里是操作流水，净额自动汇总，参与评分。</div>
+  <table>
+    <thead><tr><th style="width:112px">日期</th><th style="width:178px">工具</th>
+      <th style="text-align:right">操作（亿元）</th><th style="text-align:right">到期（亿元）</th>
+      <th style="text-align:right">净额</th><th style="width:34px"></th></tr></thead>
+    <tbody id="opsBody"></tbody>
+  </table>
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:12px;align-items:center">
+    <div style="font-size:12.5px" id="opsSummary">—</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" id="addRow">＋ 录入一笔</button>
+      <button class="btn" id="resetAll">恢复默认</button>
+    </div>
+  </div>
+  <div class="foot">数据来源：中国人民银行公开市场业务公告（默认快照 2026-11-06）。买断式逆回购、MLF、国债买卖属于中长端工具，录入后自动计入"中期资金"汇总。</div>
+</div>
+
+<!-- ═════════ 第二层 ═════════ -->
+<div class="card">
+  <h2><span class="step">2</span>市场资金到底紧不紧 <span class="tag">温度计读数</span></h2>
+  <div class="lead">这些不是央行工具，而是市场自己"喊出来"的资金价格（银行间质押式回购利率）。DR 是银行对银行，R 是全市场（含非银），R 比 DR 高得越多，说明非银机构借钱越难。</div>
+  <table>
+    <thead><tr><th>指标</th><th style="width:130px">读数（%）</th><th>含义</th><th style="text-align:right">相对政策利率</th></tr></thead>
+    <tbody id="ratesBody"></tbody>
+  </table>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:16px">
+    <div><label style="font-size:11.5px;color:var(--muted)">主要政策利率（隔夜逆回购，%）</label>
+      <input id="policyRate" type="number" step="0.01" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font:inherit"></div>
+    <div><label style="font-size:11.5px;color:var(--muted)">DR007 合理期限溢价（bp）</label>
+      <input id="termPremium" type="number" step="1" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font:inherit"></div>
+    <div><label style="font-size:11.5px;color:var(--muted)">DR001 近5日变化（bp，负=回落）</label>
+      <input id="chg001" type="number" step="1" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font:inherit"></div>
+    <div><label style="font-size:11.5px;color:var(--muted)">DR007 近5日变化（bp，负=回落）</label>
+      <input id="chg007" type="number" step="1" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font:inherit"></div>
+  </div>
+  <div class="note" id="rateNote">—</div>
+  <div class="foot">说明：2026-11-02 起央行把主要政策利率"换锚"为隔夜逆回购利率（现 1.25%），7天逆回购退为税期/月末的阶段性工具。因此 DR007 的参照系 = 政策利率 + 约 10bp 期限溢价（可自行调整）。</div>
+</div>
+
+<!-- ═════════ 第三层 ═════════ -->
+<div class="card">
+  <h2><span class="step">3</span>为什么会紧 / 松 <span class="tag">扰动识别</span></h2>
+  <div class="lead">央行操作不是孤立的。勾选当前所处的时间窗口，系统会给出扰动提示，并计入 10 分的特殊因素分。</div>
+  <div class="chips" id="factorChips"></div>
+  <div class="flags" id="factorFlags"></div>
+  <div class="note">核心原则：<b>净回笼 ≠ 收紧，净投放 ≠ 放水</b>。税期、月末过后央行回收前期"呵护性投放"，是常规操作；判断松紧最终要回到价格——资金利率有没有被推高。</div>
+</div>
+
+<!-- ═════════ 第四层 ═════════ -->
+<div class="card" id="scoreCard">
+  <h2><span class="step">4</span>自动结论 · 评分拆解 <span class="tag">V0 模型</span></h2>
+  <div class="lead">四个模块打分后加权求和。中国货币政策框架正从"看数量"转向"看价格"，未来权重会持续向价格侧倾斜——可以手动切换体验两种口径的差异。</div>
+  <div class="toggle">
+    <span class="lbl">评分口径：</span>
+    <button class="btn" id="modeV0">V0 标准 30/40/20/10</button>
+    <button class="btn" id="modePrice">价格优先 15/50/25/10</button>
+  </div>
+  <div id="bars"></div>
+  <div style="margin-top:6px;font-size:12px;color:var(--muted)" id="scoreSummary">—</div>
+</div>
+
+<!-- ═════════ 历史回看 ═════════ -->
+<div class="card" id="historyCard">
+  <h2>历史回看 · 每日快照 <span class="tag" id="histCount">—</span></h2>
+  <div class="lead">每天第一次打开页面会自动归档当天读数。点击任意一行查看当天完整解读；标注"回算"的分数是按当前 V0 模型对历史数据重算的结果。</div>
+  <table class="hist-table">
+    <thead><tr><th>日期</th><th>流动性评分</th><th>判定</th><th>DR001</th><th>DR007</th>
+      <th>DR007偏离</th><th>央行净额</th><th>两市成交</th></tr></thead>
+    <tbody id="histBody"></tbody>
+  </table>
+  <div class="hist-detail" id="histDetail">点击上方任意一天查看解读。</div>
+</div>
+
+<!-- ═════════ 为什么 & FAQ ═════════ -->
+<div class="card">
+  <h2 style="margin-bottom:12px">看懂这些词 <span class="tag">人话版</span></h2>
+  <details><summary>DR007 是什么？为什么它最重要？</summary><div class="body">
+    DR007 是银行之间用债券作抵押、借 7 天钱的成交利率（DR = 存款类机构质押式回购）。它由真实交易生成，不是央行定的，所以能反映"钱到底松不松"。政策利率是央行想达到的目标价，DR007 是市场实际成交价——两者贴得越近，说明央行调控越到位。</div></details>
+  <details><summary>逆回购是什么意思？</summary><div class="body">
+    央行把钱借给银行，银行拿债券作抵押，约定几天后还钱赎回债券。对市场来说是"放钱"。反向操作叫正回购，是"收钱"。隔夜逆回购 = 借 1 天，7天逆回购 = 借 7 天。</div></details>
+  <details><summary>买断式逆回购、MLF 和逆回购有什么区别？</summary><div class="body">
+    期限不同、作用层次不同：隔夜/7天逆回购管"日常水位"（短期），买断式逆回购（3/6个月）和 MLF（1年）管"中期水源"，降准和国债买卖管"长期水池"。短期工具天天滚动，中期工具按月操作，看加量还是缩量能判断央行中期态度。</div></details>
+  <details><summary>为什么净回笼不一定是利空？</summary><div class="body">
+    税期、月末前，央行会多投放帮银行过坎；坎过去了就把钱收回来。这种"回笼"只是把临时多给的水抽走，不代表关小水龙头。真正的判据是价格：如果大额回笼后 DR007 仍在政策利率附近甚至更低，说明市场并不缺钱。</div></details>
+  <details><summary>R001 / R007 和 DR 有什么不同？</summary><div class="body">
+    R 是全市场口径，包含券商、基金等非银机构；DR 只统计银行。非银借钱通常更贵，所以 R 一般高于 DR。当 R 与 DR 的价差明显走阔，说明流动性出现"分层"——总量不缺，但非银拿钱变难，这常是资金面恶化的早期信号。</div></details>
+  <details><summary>分数为什么会随框架变化而调整？</summary><div class="body">
+    过去央行以数量调控为主，看投放量有意义；现在明确强化短端政策利率（已换锚至隔夜逆回购）的地位、淡化数量指标，市场利率相对政策利率的位置就更能代表真实松紧。所以"价格优先"口径会给 DR007 偏离度 50 分权重，而把操作量压到 15 分。</div></details>
+</div>
+
+<div class="foot" style="text-align:center;margin-top:18px">
+  本页为个人研究原型，评分规则是简化的经验法则，不构成投资建议。数据以中国人民银行官网公告为准，可手动持续录入。<br>
+  当前数据快照：<span id="dataDate">2026-11-06</span>（由每日自动化任务更新 data.js） · 页面构建 20261106-b2
+</div>
+
+</div>
+
+<script>
+/* 中国流动性温度计 · 每日数据文件
+   由定时自动化任务更新；页面打开时若日期更新会自动采纳。
+   单位：利率 %，利差 bp，金额 亿元。amt=操作投放，due=当日到期。 */
+window.PBEC_DATA = {
+  date: "2026-11-06",
+  rev: 1,   /* 同一天修正数据时 +1；页面也支持按内容自动识别，不依赖本字段 */
+  policyRate: 1.25,
+  termPremium: 10,
+  dr001: 1.260,
+  dr007: 1.320,
+  r001: 1.285,
+  r007: 1.355,
+  chg001: -8,
+  chg007: -5,
+  factors: { tax:false, monthEnd:false, quarter:false, festival:false, bond:true, fiscal:false },
+  ops: [
+    { date:"2026-11-06", type:"7天逆回购", amt:2575, due:7720 },
+    { date:"2026-11-05", type:"隔夜逆回购", amt:2630, due:3725 },
+    { date:"2026-11-05", type:"买断式逆回购（3个月）", amt:3000, due:5000 }
+  ],
+
+  /* A股两市成交额（亿元），prevAmount = 前一交易日全天成交额 */
+  market: {
+    date: "2026-11-05",
+    amount: 21173.89,
+    prevAmount: 20369.97,
+    prevDate: "2026-11-04",
+    source: "2026-11-05 收盘 · 沪深两市成交额 21,173.89 亿（环比 +803.92 亿 / +3.9%）"
+  },
+
+  /* 历史快照：score 为按当前 V0 模型回算值（标注 estimate）；缺数据的字段为 null */
+  history: [
+    { date:"2026-11-06", score:40.5, verdict:"中性", dr001:1.260, dr007:1.320,
+      spread:-3.0, net:-5145, amount:null, amountChg:null, estimate:false,
+      note:"央行单日净回笼 5145 亿；DR001 贴政策利率、较月均回落，价格信号显示资金面平稳偏松。" },
+    { date:"2026-11-05", score:52.4, verdict:"中性", dr001:1.260, dr007:1.320,
+      spread:-3.0, net:-1095, amount:21173.89, amountChg:803.92, estimate:true,
+      note:"央行净回笼 1095 亿；两市成交 21,173.89 亿、较前日 +803.92 亿（+3.9%）；买断式逆回购 3000 亿缩量续作。分数为按当前模型回算。" },
+    { date:"2026-11-04", score:null, verdict:"—", dr001:1.2591, dr007:null,
+      spread:null, net:null, amount:20369.97, amountChg:null, estimate:true,
+      note:"DR001 报 1.2591%，为近 4 个月最低；央行公告将于 11-05 开展 3000 亿买断式逆回购。成交额由 11-05 环比数据倒推，仅供参照。" }
+  ],
+
+  /* 流动性状态 → 市场表现 每日样本（从 2026-11-06 开始积累，页面与自动化共同追加） */
+  marketStats: [
+    { date:"2026-11-06", score:40.5, state:"中性", shPct:-1.14, szPct:-2.22,
+      fundNet:-431.19, amountChg:-3432.95,
+      note:"盘中快照（11:30）：两市主力资金净流出 431.19 亿；成交额较前日同时段 -3,432.95 亿。" }
+  ]
+};
+
+</script>
+<script>
+/* ══════════════ 默认数据 ══════════════ */
+const LS = "pboc_thermo_v1";
+const SCHEMA_KEY = "pboc_thermo_schema";
+const SCHEMA = "2";   // 2026-11-06：归档日期改用真实日历日、样本按评分口径分组
+/* 本地日历日；不能用 toISOString()（UTC，北京时间 08:00 前会退回前一天） */
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0")
+       + "-" + String(d.getDate()).padStart(2,"0");
+}
+const DEFAULTS = {
+  policyRate: 1.25,      // 隔夜逆回购（主要政策利率，2026-11-02 起）
+  termPremium: 10,       // bp
+  dr001: 1.260, dr007: 1.320, r001: 1.285, r007: 1.355,
+  chg001: -8, chg007: -5,
+  mode: "v0",
+  factors: { tax:false, monthEnd:false, quarter:false, festival:false, bond:true, fiscal:false },
+  ops: [
+    { date:"2026-11-06", type:"7天逆回购", amt:2575, due:7720 },
+    { date:"2026-11-05", type:"隔夜逆回购", amt:2630, due:3725 },
+    { date:"2026-11-05", type:"买断式逆回购（3个月）", amt:3000, due:5000 }
+  ],
+  market: { date:"2026-11-05", amount:21173.89, prevAmount:20369.97, prevDate:"2026-11-04", source:"" },
+  quote: null,
+  sameTime: null
+};
+const OPS_TYPES = ["隔夜逆回购","7天逆回购","买断式逆回购（3个月）","买断式逆回购（6个月）",
+                   "MLF","国库现金定存","国债买入","国债卖出","降准","其他"];
+
+const FACTORS = [
+  {k:"tax",       n:"税期（月中缴税）",       adj:-2, msg:"缴税会把资金从银行体系抽到国库，通常是资金面最紧的几天。"},
+  {k:"monthEnd",  n:"月末 / 跨月",            adj:-1, msg:"监管考核 + 跨月备付需求，资金价格容易翘尾。"},
+  {k:"quarter",   n:"季末 / 跨季",            adj:-1, msg:"季末考核压力更大，非银机构借钱更贵，注意 R-DR 价差。"},
+  {k:"festival",  n:"春节前取现",             adj:-3, msg:"居民取现需求集中爆发，央行通常加大投放对冲。"},
+  {k:"bond",      n:"政府债发行高峰",         adj:-2, msg:"政府债缴款会阶段性抽走流动性，需央行配合投放。"},
+  {k:"fiscal",    n:"财政支出集中投放",       adj:2,  msg:"财政花钱会把资金重新注入银行体系，相当于被动宽松。"}
+];
+
+/* ══════════════ 状态 ══════════════ */
+let S = JSON.parse(JSON.stringify(DEFAULTS));
+/* localStorage 安全封装：不可用（隐私模式/受限环境）时退化为内存存储，页面照常运行 */
+const store = (()=>{ try{
+    const t = window.localStorage; t.setItem("__pbec_t","1"); t.removeItem("__pbec_t"); return t;
+  }catch(e){ const m = {}; return { getItem:k=>(k in m? m[k]:null), setItem:(k,v)=>{m[k]=String(v);} }; } })();
+const save = ()=> store.setItem(LS, JSON.stringify(S));
+try{ const raw = store.getItem(LS); if(raw){ const o=JSON.parse(raw); S={...S,...o}; S.factors={...DEFAULTS.factors,...(o.factors||{})}; } }catch(e){}
+/* 外部数据文件（自动化每日更新 data.js）：按「内容签名」采纳。
+   旧逻辑只比 date，同一天内的数据修正永远不生效；现在任何关键字段变化
+   （含同日修正、rev 递增）都会重新采纳，且 data.js 不变时不会覆盖用户手动调参。 */
+if(window.PBEC_DATA && window.PBEC_DATA.date){
+  const D = window.PBEC_DATA;
+  const sig = [D.date, D.rev||0, D.updatedAt||"",
+               D.policyRate, D.termPremium, D.dr001, D.dr007, D.r001, D.r007,
+               D.chg001, D.chg007,
+               JSON.stringify(D.ops||[]), JSON.stringify(D.factors||{}),
+               JSON.stringify(D.market||{})].join("|");
+  if(sig !== S._dataSig){
+    ["policyRate","termPremium","dr001","dr007","r001","r007","chg001","chg007"].forEach(k=>{
+      if(D[k]!=null) S[k]=D[k];
+    });
+    if(Array.isArray(D.ops) && D.ops.length) S.ops = D.ops;
+    if(D.factors) S.factors = {...DEFAULTS.factors, ...D.factors};
+    if(D.market) S.market = {...DEFAULTS.market, ...D.market};
+    S._dataDate = D.date;
+    S._dataSig = sig;
+    save();
+  }
+}
+/* 历史数据：外部 history 与本地每日归档合并（按评分口径隔离，与 marketStats 一致） */
+const HS = "pboc_thermo_history";
+/* date|mode：切换评分口径时两条历史各自保留，不互相覆盖 */
+const msKey = d => d.date + "|" + (d.mode || "v0");
+/* 断更保护：只有数据快照日期等于本机日历日，才允许生成「当日实算」记录。
+   否则会把旧快照的分数标成今天，或把旧分数与新行情配成统计样本。 */
+function dataIsFresh(){
+  const d = (window.PBEC_DATA && window.PBEC_DATA.date) || S._dataDate;
+  return d === todayStr();
+}
+const nonNull = o => Object.fromEntries(Object.entries(o||{}).filter(([,v])=> v!=null));
+function getHistory(){
+  let local = [];
+  try{ local = JSON.parse(store.getItem(HS) || "[]"); }catch(e){}
+  const map = {};
+  ((window.PBEC_DATA && window.PBEC_DATA.history) || []).forEach(h=>{ map[msKey(h)] = h; });
+  local.forEach(h=>{ const k = msKey(h); map[k] = {...(map[k]||{}), ...nonNull(h)}; });
+  return Object.values(map).sort((a,b)=> a.date < b.date ? 1 : -1);
+}
+function archiveToday(r){
+  if(!dataIsFresh()) return getHistory();   // 断更：不写入伪「当天」记录
+  const list = getHistory();
+  const snap = {
+    date: todayStr(), mode: S.mode || "v0",
+    score:+r.total.toFixed(1), verdict: verdictOf(r.total).t,
+    dr001:S.dr001, dr007:S.dr007, spread:+r.spread7.toFixed(1), net:r.st.todayNet,
+    amount: (S.quote && S.quote.amount) || S.market.amount,
+    amountChg: (()=>{ const sm = sameTimeTotal(); return sm ? +(((S.quote && S.quote.amount) || S.market.amount) - sm.at).toFixed(2) : null; })(),
+    estimate:false,
+    note:"页面自动归档的当日快照：" + aiSentence(r)
+  };
+  const next = [snap, ...list.filter(h=> msKey(h) !== msKey(snap))];
+  store.setItem(HS, JSON.stringify(next));
+  return next;
+}
+
+/* ── 流动性状态 → 市场表现 统计（从今日开始积累） ── */
+const MS = "pboc_market_stats";
+const stateOf = s => s>=60 ? "宽松" : (s>=40 ? "中性" : "偏紧");
+
+/* 一次性迁移（schema 2）：旧版把「数据快照日期」当归档日期，断更时会把
+   今天的行情写进旧日期。HS/MS 都是页面自动生成的记录，权威样本始终来自
+   data.js，故清空重建；用户手动调的参数存在 S 里，不受影响。 */
+(function migrate(){
+  try{
+    if(store.getItem(SCHEMA_KEY) === SCHEMA) return;
+    store.setItem(HS, "[]");
+    store.setItem(MS, "[]");
+    store.setItem(SCHEMA_KEY, SCHEMA);
+  }catch(e){}
+})();
+
+function getMarketStats(){
+  let local = [];
+  try{ local = JSON.parse(store.getItem(MS) || "[]"); }catch(e){}
+  const map = {};
+  ((window.PBEC_DATA && window.PBEC_DATA.marketStats) || []).forEach(d=>{ map[msKey(d)] = d; });
+  local.forEach(d=>{
+    const k = msKey(d);
+    map[k] = {...(map[k]||{}), ...nonNull(d)};   // null 不覆盖 data.js 的真值
+  });
+  return Object.values(map).sort((a,b)=> a.date < b.date ? -1 : (a.date > b.date ? 1 : 0));
+}
+function archiveMarket(){
+  if(!dataIsFresh()) return;   // 断更：不把旧流动性分数与新行情配成样本
+  const r = computeScore(), q = S.quote, sm = sameTimeTotal();
+  const rec = {
+    date: todayStr(),                  // 真实日历日，不用数据快照日
+    mode: S.mode || "v0",              // 口径不同的样本分开存，不混进同一条曲线
+    score: +r.total.toFixed(1), state: stateOf(r.total),
+    shPct: (q && q.live && q.shPct!=null) ? q.shPct : null,
+    szPct: (q && q.live && q.szPct!=null) ? q.szPct : null,
+    fundNet: (q && q.live && q.fundNet!=null) ? q.fundNet : null,
+    amountChg: sm ? +((currentAmount() - sm.at).toFixed(2)) : null,
+    note: "页面自动归档"
+  };
+  const k = msKey(rec);
+  const old = getMarketStats().find(x=> msKey(x) === k) || {};
+  ["shPct","szPct","fundNet","amountChg"].forEach(f=>{
+    if(rec[f] == null && old[f] != null) rec[f] = old[f];   // 数据分批到达时保留已取到的值
+  });
+  const list = getMarketStats().filter(x=> msKey(x) !== k);
+  list.push(rec);
+  store.setItem(MS, JSON.stringify(list));
+  renderStats();
+}
+function pctTxt(v){ return v==null ? "—" : (v>0?"+":"") + v.toFixed(2) + "%"; }
+function renderStats(){
+  const list = getMarketStats().filter(d => (d.mode||"v0") === (S.mode||"v0"));
+  document.getElementById("statsCount").textContent =
+    list.length + " 天 · " + (S.mode==="price" ? "价格优先" : "数量优先");
+  const t = list[list.length-1] || {};
+  document.getElementById("statToday").innerHTML = t.date
+    ? `<div class="muted" style="font-size:11px">今日归档 · ${t.date}</div>
+       <div>流动性 <b>${t.score==null?"—":t.score} 分</b> · <b>${t.state||"—"}</b></div>
+       <div>上证 <b class="${t.shPct==null?'':(t.shPct>=0?'pos':'neg')}">${pctTxt(t.shPct)}</b>
+       　主力资金 <b class="${t.fundNet==null?'':(t.fundNet>=0?'pos':'neg')}">${t.fundNet==null?"—":(t.fundNet>=0?"+":"")+num2(t.fundNet)+" 亿"}</b></div>
+       <div class="muted" style="font-size:11px">成交额较前日同时段 ${t.amountChg==null?"—":(t.amountChg>=0?"+":"")+num2(t.amountChg)+" 亿"}</div>`
+    : "等待首条样本…";
+
+  const states = [
+    {k:"偏紧", c:"var(--red)", bg:"var(--red-bg)"},
+    {k:"中性", c:"#4b5563", bg:"var(--gray)"},
+    {k:"宽松", c:"var(--blue)", bg:"var(--blue-bg)"}
+  ];
+  const groups = states.map(s=>{
+    const rows = list.filter(d=>d.state===s.k);
+    const pv = rows.filter(d=>d.shPct!=null), fv = rows.filter(d=>d.fundNet!=null);
+    const up = pv.filter(d=>d.shPct>0).length, fin = fv.filter(d=>d.fundNet>0).length;
+    const pUp = pv.length ? up/pv.length*100 : null;
+    const pIn = fv.length ? fin/fv.length*100 : null;
+    const avgPct = pv.length ? pv.reduce((a,d)=>a+d.shPct,0)/pv.length : null;
+    const avgFund = fv.length ? fv.reduce((a,d)=>a+d.fundNet,0)/fv.length : null;
+    return {...s, n:rows.length, pUp, pIn, avgPct, avgFund, pv:pv.length, fv:fv.length};
+  });
+  document.getElementById("statGrid").innerHTML = groups.map(g=>`
+    <div class="stat-box">
+      <div class="h"><span style="color:${g.c}">● ${g.k}</span><span class="n">${g.n} 天样本</span></div>
+      <div class="prob"><div class="row"><span>大盘上涨概率</span><b>${g.pUp==null?"—":Math.round(g.pUp)+"%"}</b></div>
+        <div class="pbar"><div style="width:${g.pUp||0}%;background:var(--red)"></div></div>
+        <div class="row"><span>资金净流入概率</span><b>${g.pIn==null?"—":Math.round(g.pIn)+"%"}</b></div>
+        <div class="pbar"><div style="width:${g.pIn||0}%;background:var(--blue)"></div></div>
+        <div class="row muted"><span>平均涨跌 ${pctTxt(g.avgPct)}</span>
+          <span>平均资金 ${g.avgFund==null?"—":(g.avgFund>=0?"+":"")+num2(g.avgFund)+"亿"}</span></div>
+        ${g.pv<5?'<div class="n" style="margin-top:6px;color:var(--orange)">样本不足 5 天，暂不给结论</div>':''}
+      </div>
+    </div>`).join("");
+
+  const best = groups.filter(g=>g.pv>=5).sort((a,b)=>b.pv-a.pv)[0];
+  document.getElementById("statConclusion").innerHTML = best
+    ? `<div class="muted" style="font-size:11px">当前最有参考价值的结论</div>
+       样本最多的状态是 <b>${best.k}</b>（${best.pv} 天）：大盘上涨概率 <b>${Math.round(best.pUp)}%</b>
+       （平均 ${pctTxt(best.avgPct)}），主力资金净流入概率 <b>${best.pIn==null?"—":Math.round(best.pIn)+"%"}</b>。
+       <div class="muted" style="font-size:11px;margin-top:4px">样本仍在累积，结论会随天数变化。</div>`
+    : `<div class="muted" style="font-size:11px">概率结论</div>
+       目前共 <b>${list.length}</b> 天样本，任一状态满 <b>5 天</b>后才会给出概率结论。
+       <div class="muted" style="font-size:11px;margin-top:4px">每天打开页面（或由自动任务）追加一条，曲线会慢慢长出来。</div>`;
+
+  // 评分曲线
+  const W=900, H=180, x0=38, x1=870, y0=152, y1=16;
+  const yOf = v => y0 - (Math.max(0,Math.min(100,v))/100)*(y0-y1);
+  const n = list.length;
+  const xOf = i => n<=1 ? (x0+x1)/2 : x0 + i*(x1-x0)/(n-1);
+  const bands = [
+    {a:0,b:40,c:"var(--red-bg)"}, {a:40,b:60,c:"var(--gray)"}, {a:60,b:100,c:"var(--blue-bg)"}
+  ].map(b=>`<rect x="${x0}" y="${yOf(b.b)}" width="${x1-x0}" height="${yOf(b.a)-yOf(b.b)}" fill="${b.c}" opacity="0.75"/>`).join("");
+  const grid = [0,20,40,60,80,100].map(v=>
+    `<line x1="${x0}" y1="${yOf(v)}" x2="${x1}" y2="${yOf(v)}" stroke="#e3e6eb" stroke-width="1"/>
+     <text x="${x0-6}" y="${yOf(v)+3}" text-anchor="end" font-size="9" fill="#9ca3af">${v}</text>`).join("");
+  const line = n>1 ? `<polyline points="${list.map((d,i)=>xOf(i)+","+yOf(d.score)).join(" ")}"
+      fill="none" stroke="#3f4650" stroke-width="2" stroke-linejoin="round"/>` : "";
+  const step = Math.max(1, Math.ceil(n/12));
+  const dots = list.map((d,i)=>{
+    const x=xOf(i), y=yOf(d.score);
+    const col = d.shPct==null ? "#9ca3af" : (d.shPct>=0 ? "var(--red)" : "var(--green)");
+    const arrow = d.fundNet==null ? "" : (d.fundNet>=0 ? "↑" : "↓");
+    return `<circle cx="${x}" cy="${y}" r="4.5" fill="${col}" stroke="#fff" stroke-width="1.5"/>
+      <text x="${x}" y="${y-9}" text-anchor="middle" font-size="9" fill="#4b5563">${d.score}${arrow}</text>
+      ${i%step===0?`<text x="${x}" y="${y0+14}" text-anchor="middle" font-size="9" fill="#9ca3af">${(d.date||"").slice(5)}</text>`:""}`;
+  }).join("");
+  document.getElementById("statChart").innerHTML =
+    bands + grid + line + dots +
+    `<text x="${x0}" y="${y0+30}" font-size="9" fill="#9ca3af">蓝=宽松带 · 灰=中性带 · 红=偏紧带（纵轴 0–100 分）</text>`;
+}
+
+/* ══════════════ 计算 ══════════════ */
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmtBP = v => (v>0?"+":"") + v.toFixed(1) + "bp";
+
+function opsByDate(){
+  const map = {};
+  S.ops.forEach(r=>{ map[r.date] = (map[r.date]||0) + (r.amt - r.due); });
+  return Object.keys(map).sort().reverse().map(d=>({date:d, net:map[d]}));
+}
+function opsStats(){
+  const days = opsByDate();
+  const todayNet = days.length ? days[0].net : 0;
+  const net5 = days.slice(0,5).reduce((s,d)=>s+d.net,0);
+  // 连续同向天数
+  let streak = 0, sign = 0;
+  for(const d of days){
+    const sg = Math.sign(d.net);
+    if(sg===0) break;
+    if(sign===0){ sign = sg; streak = 1; }
+    else if(sg===sign) streak++;
+    else break;
+  }
+  const midNet = S.ops.filter(r=>r.type.includes("买断式")||r.type==="MLF")
+                      .reduce((s,r)=>s+(r.amt-r.due),0);
+  return {todayNet, net5, streak, sign, midNet, days};
+}
+
+function computeScore(){
+  const st = opsStats();
+  const policyBP = S.policyRate*100, dr7BP = S.dr007*100, dr1BP = S.dr001*100;
+  const anchor7 = policyBP + S.termPremium;      // DR007 合理中枢（bp）
+  const spread7 = dr7BP - anchor7;               // 关键偏离度
+
+  // 模块1 政策操作 30：5日累计净投放，每600亿≈1分
+  const opsScore = clamp(15 + st.net5/600, 0, 30);
+  // 模块2 市场资金价格 40：DR007 相对合理中枢，每偏离1bp扣1分
+  const priceScore = clamp(20 - spread7, 0, 40);
+  // 模块3 趋势 20：DR001/DR007 5日变化，每bp 0.25分
+  const trendScore = clamp(10 - (S.chg007 + S.chg001)/4, 0, 20);
+  // 模块4 特殊因素 10：基准5分 + 日历调整
+  let fAdj = 0, flags = [];
+  FACTORS.forEach(f=>{ if(S.factors[f.k]){ fAdj += f.adj; flags.push(f); } });
+  const factorScore = clamp(5 + fAdj, 0, 10);
+
+  const W = S.mode==="price" ? {ops:15,price:50,trend:25,factor:10} : {ops:30,price:40,trend:20,factor:10};
+  const total = (opsScore/30)*W.ops + (priceScore/40)*W.price
+              + (trendScore/20)*W.trend + (factorScore/10)*W.factor;
+
+  return {st, opsScore, priceScore, trendScore, factorScore, total,
+          spread7, anchor7, flags, W,
+          parts:{ops:{s:opsScore,m:30,w:W.ops},price:{s:priceScore,m:40,w:W.price},
+                 trend:{s:trendScore,m:20,w:W.trend},factor:{s:factorScore,m:10,w:W.factor}}};
+}
+
+function verdictOf(s){
+  if(s>=80) return {t:"明显宽松", c:"#0b4fbe", bg:"#e8f0fe"};
+  if(s>=60) return {t:"偏松",     c:"#1f6feb", bg:"#eef5ff"};
+  if(s>=40) return {t:"中性",     c:"#3f4650", bg:"#f0f2f5"};
+  if(s>=20) return {t:"偏紧",     c:"#d5402b", bg:"#fdecea"};
+  return {t:"明显偏紧", c:"#a52a1a", bg:"#fbe3e0"};
+}
+
+/* ══════════════ 渲染 ══════════════ */
+function renderHero(r){
+  const v = verdictOf(r.total);
+  document.getElementById("scoreBig").innerHTML =
+    Math.round(r.total) + '<span> / 100</span>';
+  document.getElementById("scoreBig").style.color = v.c;
+  const pill = document.getElementById("verdictPill");
+  pill.textContent = v.t; pill.style.color = v.c; pill.style.background = v.bg;
+
+  // 指针
+  const x = 10 + (r.total/100)*340;
+  document.getElementById("needleG").innerHTML =
+    `<line x1="${x}" y1="22" x2="${x}" y2="42" stroke="#1a1d21" stroke-width="2.5" stroke-linecap="round"/>
+     <circle cx="${x}" cy="32" r="5.5" fill="#fff" stroke="#1a1d21" stroke-width="2.5"/>`;
+
+  // 四张卡
+  const st = r.st;
+  const opsEl = document.getElementById("cardOps");
+  opsEl.innerHTML = (st.todayNet>=0?"+":"") + st.todayNet.toLocaleString() + "<span style='font-size:12px;font-weight:600'>亿</span>";
+  opsEl.className = "v " + (st.todayNet>=0?"pos":"neg");
+  document.getElementById("cardOpsSub").textContent =
+    st.todayNet>=0 ? "净投放，央行在放钱" : "净回笼，央行在收钱";
+
+  document.getElementById("cardDr001").textContent = S.dr001.toFixed(3) + "%";
+  document.getElementById("cardDr001Sub").innerHTML = trendHtml(S.chg001);
+  document.getElementById("cardDr007").textContent = S.dr007.toFixed(3) + "%";
+  document.getElementById("cardDr007Sub").innerHTML = trendHtml(S.chg007);
+
+  const spEl = document.getElementById("cardSpread");
+  spEl.textContent = fmtBP(r.spread7);
+  spEl.className = "v " + (r.spread7>3?"pos":(r.spread7<-3?"down":"flat"));
+  spEl.style.color = r.spread7<-3 ? "#1f6feb" : (r.spread7>3 ? "var(--red)" : "var(--muted)");
+  document.getElementById("cardSpreadSub").textContent =
+    r.spread7<-3 ? "低于中枢，资金面偏松" : (r.spread7>3 ? "高于中枢，资金面偏紧" : "基本贴合中枢");
+
+  document.getElementById("aiText").textContent = aiSentence(r);
+}
+
+function trendHtml(bp){
+  if(bp<-0.5) return `<span class="down">↓ 5日 ${bp}bp，在变松</span>`;
+  if(bp>0.5)  return `<span class="up">↑ 5日 +${bp}bp，在变紧</span>`;
+  return `<span class="flat">5日基本走平</span>`;
+}
+
+function aiSentence(r){
+  const st = r.st, v = verdictOf(r.total);
+  let s = `今天资金面${v.t}（${Math.round(r.total)}分）。`;
+  s += `央行公开市场当日${st.todayNet>=0?"净投放":"净回笼"}${Math.abs(st.todayNet).toLocaleString()}亿元`;
+  if(st.streak>1) s += `，已连续${st.streak}日${st.sign>0?"净投放":"净回笼"}`;
+  s += "。";
+
+  if(r.spread7 < -3) s += `但 DR007 报 ${S.dr007.toFixed(3)}%，比政策利率合理中枢低 ${Math.abs(r.spread7).toFixed(0)}bp`;
+  else if(r.spread7 > 3) s += `同时 DR007 报 ${S.dr007.toFixed(3)}%，比合理中枢高 ${r.spread7.toFixed(0)}bp`;
+  else s += `DR007 报 ${S.dr007.toFixed(3)}%，基本贴着政策利率中枢`;
+
+  if(S.chg001<0 && S.chg007<0) s += `，隔夜与七天利率近5日同步回落，说明银行体系实际资金供给较为充裕——${st.todayNet<0?"回笼更像是回收前期投放，而不是收紧":"价格与数量信号一致指向宽松"}。`;
+  else if(S.chg001>0 && S.chg007>0) s += `，且近5日持续上行，价格信号显示真实资金面在收紧${st.todayNet>0?"，央行投放尚未完全对冲压力":""}。`;
+  else s += `，短端利率走势分化，资金面处于再平衡过程。`;
+
+  if(st.midNet !== 0) s += ` 中期工具（买断式逆回购/MLF）合计${st.midNet>=0?"净投放":"净回笼"}${Math.abs(st.midNet).toLocaleString()}亿元。`;
+  if(r.flags.length) s += ` 当前处于${r.flags.map(f=>f.n).join("、")}窗口，需留意扰动。`;
+  return s;
+}
+
+function renderOps(){
+  const tb = document.getElementById("opsBody");
+  tb.innerHTML = S.ops.map((r,i)=>`
+    <tr>
+      <td><input type="date" value="${r.date}" data-i="${i}" data-k="date"></td>
+      <td><select data-i="${i}" data-k="type">
+        ${OPS_TYPES.map(t=>`<option ${t===r.type?"selected":""}>${t}</option>`).join("")}
+      </select></td>
+      <td><input type="number" class="num" value="${r.amt}" data-i="${i}" data-k="amt"></td>
+      <td><input type="number" class="num" value="${r.due}" data-i="${i}" data-k="due"></td>
+      <td class="num ${r.amt-r.due>=0?"pos":"neg"}">${r.amt-r.due>=0?"+":""}${(r.amt-r.due).toLocaleString()}</td>
+      <td><button class="rowbtn" data-del="${i}">✕</button></td>
+    </tr>`).join("");
+
+  tb.querySelectorAll("input,select").forEach(el=>{
+    el.onchange = ()=>{
+      const i=+el.dataset.i, k=el.dataset.k;
+      S.ops[i][k] = (k==="amt"||k==="due") ? (+el.value||0) : el.value;
+      save(); renderAll();
+    };
+  });
+  tb.querySelectorAll("[data-del]").forEach(b=>{
+    b.onclick = ()=>{ S.ops.splice(+b.dataset.del,1); save(); renderAll(); };
+  });
+
+  const st = opsStats();
+  const today = st.days.length?st.days[0].date:'—';
+  document.getElementById("opsSummary").innerHTML =
+    `<b>${today}</b>：当日净额 <b class="${st.todayNet>=0?'pos':'neg'}">${st.todayNet>=0?"+":""}${st.todayNet.toLocaleString()}亿</b>
+     · 连续 <b>${st.streak}日${st.sign>0?"净投放":"净回笼"}</b>
+     · 5日累计 <b class="${st.net5>=0?'pos':'neg'}">${st.net5>=0?"+":""}${st.net5.toLocaleString()}亿</b>
+     · 中期工具 <b class="${st.midNet>=0?'pos':'neg'}">${st.midNet>=0?"+":""}${st.midNet.toLocaleString()}亿</b>`;
+}
+
+function renderRates(){
+  const policyBP = S.policyRate*100;
+  const rows = [
+    {n:"DR001", v:S.dr001, d:"银行间隔夜借钱贵不贵（短期最灵敏）", k:"dr001"},
+    {n:"DR007", v:S.dr007, d:"银行间7天借钱贵不贵（核心观察指标）", k:"dr007"},
+    {n:"R001",  v:S.r001,  d:"全市场隔夜（含券商基金，通常略高）", k:"r001"},
+    {n:"R007",  v:S.r007,  d:"全市场7天，看非银拿钱难不难", k:"r007"}
+  ];
+  document.getElementById("ratesBody").innerHTML = rows.map(r=>{
+    const bp = (r.v - S.policyRate)*100;
+    return `<tr>
+      <td style="font-weight:700">${r.n}</td>
+      <td><input type="number" step="0.001" value="${r.v.toFixed(3)}" data-r="${r.k}"></td>
+      <td class="muted" style="font-size:12.5px">${r.d}</td>
+      <td class="num ${bp>3?'pos':(bp<-3?'neg':'flat')}">${fmtBP(bp)}</td>
+    </tr>`;
+  }).join("");
+
+  document.querySelectorAll("[data-r]").forEach(el=>{
+    el.onchange = ()=>{ S[el.dataset.r] = +el.value||0; save(); renderAll(); };
+  });
+
+  const tier = (S.r007 - S.dr007)*100;
+  document.getElementById("rateNote").innerHTML = tier>10
+    ? `⚠️ <b>R007 比 DR007 高 ${tier.toFixed(0)}bp</b>：非银机构借钱明显更贵，流动性出现"分层"——总量或许不缺，但结构性紧张，通常是要警惕的信号。`
+    : `R007 比 DR007 高 ${tier.toFixed(0)}bp，属正常范围：非银借钱贵一点是常态，价差没有异常走阔，暂时看不到流动性分层压力。`;
+}
+
+function renderFactors(){
+  document.getElementById("factorChips").innerHTML = FACTORS.map(f=>`
+    <label class="chk ${S.factors[f.k]?"checked":""}" data-f="${f.k}">
+      <input type="checkbox" ${S.factors[f.k]?"checked":""} data-fk="${f.k}"> ${f.n}
+    </label>`).join("");
+  document.querySelectorAll("[data-fk]").forEach(el=>{
+    el.onchange = ()=>{ S.factors[el.dataset.fk] = el.checked; save(); renderAll(); };
+  });
+  const active = FACTORS.filter(f=>S.factors[f.k]);
+  document.getElementById("factorFlags").innerHTML = active.length
+    ? active.map(f=>`<div>• <b>${f.n}</b>（${f.adj>0?"+":""}${f.adj}分）：${f.msg}</div>`).join("")
+    : `<div class="muted">当前未勾选任何日历扰动因素，资金面主要受央行主动操作驱动。</div>`;
+}
+
+function renderBars(r){
+  const defs = [
+    {k:"ops",   n:"政策操作分",   desc:`5日累计净投放 ${r.st.net5>=0?"+":""}${r.st.net5.toLocaleString()}亿，连续${r.st.streak}日${r.st.sign>0?"投放":"回笼"}`},
+    {k:"price", n:"市场资金价格分", desc:`DR007 ${S.dr007.toFixed(3)}%，相对中枢（政策利率+${S.termPremium}bp）${fmtBP(r.spread7)}`},
+    {k:"trend", n:"趋势分",       desc:`DR001 5日 ${S.chg001}bp，DR007 5日 ${S.chg007}bp`},
+    {k:"factor",n:"特殊因素分",   desc:r.flags.length? `扰动：${r.flags.map(f=>f.n).join("、")}` : "无日历扰动，取中性基准"}
+  ];
+  document.getElementById("bars").innerHTML = defs.map(d=>{
+    const p = r.parts[d.k];
+    const pct = p.s/p.m*100;
+    const weighted = p.s/p.m*p.w;
+    const color = pct>=60 ? "#1f6feb" : (pct>=40 ? "#7a828c" : "#d5402b");
+    return `<div class="bar">
+      <div class="top"><span><b>${d.n}</b> <span class="muted">· 权重 ${p.w}%</span></span>
+        <span><b style="color:${color}">${p.s.toFixed(1)}</b><span class="muted"> / ${p.m} → 计入 ${weighted.toFixed(1)} 分</span></span></div>
+      <div class="track"><div class="fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="sub">${d.desc}</div>
+    </div>`;
+  }).join("");
+
+  const v = verdictOf(r.total);
+  document.getElementById("scoreSummary").innerHTML =
+    `合计 <b style="color:${v.c}">${r.total.toFixed(1)} / 100 → ${v.t}</b>　|　分档：80+ 明显宽松 · 60–79 偏松 · 40–59 中性 · 20–39 偏紧 · &lt;20 明显偏紧`;
+}
+
+/* ── A股两市成交额面板 ── */
+const num2 = v => v.toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2});
+function currentAmount(){ return (S.quote && S.quote.amount) || S.market.amount; }
+
+/* 当前时刻 HH:MM；收盘后取 15:00（=全天），开盘前取 09:25（=集合竞价） */
+function nowHM(){
+  const d = new Date(), h = d.getHours(), m = d.getMinutes();
+  if(h >= 15) return "15:00";
+  if(h < 9 || (h === 9 && m < 25)) return "09:25";
+  if((h === 11 && m > 30) || h === 12) return "11:30";   // 午间休市，对齐上午收盘时点
+  return String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0");
+}
+/* 由缓存的前一日分钟成交额，重算"到当前时刻为止"的累计值（亿元） */
+function sameTimeTotal(){
+  const st = S.sameTime;
+  if(!st) return null;
+  if(st.manual && st.manualAt != null)
+    return { at:st.manualAt, full:S.market.prevAmount, hm:nowHM(),
+             prevDate:st.prevDate || S.market.prevDate, live:false };
+  if(!st.series || !st.series.length) return null;
+  const hm = nowHM();
+  let at = 0, full = 0;
+  st.series.forEach(r=>{ const v = r[1] + r[2]; full += v; if(r[0] <= hm) at += v; });
+  return { at:+(at/1e8).toFixed(2), full:+(full/1e8).toFixed(2), hm, prevDate:st.prevDate, live:!st.manual };
+}
+
+function renderMarket(){
+  const amt = currentAmount();
+  const sm = sameTimeTotal();
+  const prevFull = (sm && sm.full) || S.market.prevAmount;
+  /* 优先用同时段基准；取不到时退回全天基准并明确标注 */
+  const base0 = sm ? sm.at : 0;
+  const aligned = !!sm && base0 > 0;      // 开盘前基准为 0，退回全天口径
+  const base = aligned ? base0 : prevFull;
+  const diff = amt - base, pct = base ? diff/base*100 : 0, up = diff >= 0;
+  const c = up ? "var(--red)" : "var(--green)";
+  const closed = nowHM() === "15:00";
+
+  document.getElementById("mktAmount").innerHTML = num2(amt) + "<span> 亿元</span>";
+  const d = document.getElementById("mktDiff");
+  d.textContent = `较前一交易日${aligned && !closed ? "同一时段（" + sm.hm + "）" : "全天"} `
+                + `${up?"+":"−"}${num2(Math.abs(diff))} 亿元（${up?"+":"−"}${Math.abs(pct).toFixed(2)}%）`;
+  d.style.color = c;
+  document.getElementById("mktSub").textContent = aligned
+    ? `前日（${sm.prevDate}）同一时段累计 ${num2(sm.at)} 亿 · 前日全天 ${num2(prevFull)} 亿 · ${up?"量能同比放大":"量能同比收缩"}`
+    : `前日（${S.market.prevDate}）全天 ${num2(prevFull)} 亿 · 同时段基准获取中或不可用`;
+  document.getElementById("mktInput").value = amt;
+  document.getElementById("mktSame").value = aligned ? sm.at : "";
+  document.getElementById("mktPrev").value = prevFull;
+
+  const q = S.quote;
+  document.getElementById("mktSide").innerHTML = (q && q.live)
+    ? `<div><span class="live-dot"></span><b>在线实时行情</b> · ${q.time}</div>
+       <div>上证指数 <b class="${q.shPct>=0?'pos':'neg'}">${q.shPct>=0?'+':''}${q.shPct}%</b>　
+           深证成指 <b class="${q.szPct>=0?'pos':'neg'}">${q.szPct>=0?'+':''}${q.szPct}%</b></div>
+       <div class="muted">数据源：东方财富公开行情接口</div>
+       <div class="muted">对比口径：${aligned ? (closed?"全天（已收盘）":"前日同一时段 "+sm.hm) : "等待同时段数据"}</div>`
+    : `<div><b>离线快照</b> · ${S.market.source || S.market.date + " 收盘"}</div>
+       <div class="muted">点击「刷新实时行情」可获取盘中最新数据</div>`;
+
+  document.getElementById("mktCaveat").innerHTML = aligned
+    ? (closed
+        ? `✅ <b>已收盘</b>，当前为全天成交额，与前一日全天同口径可比；盘中时会自动切换为「同一时段」对比。`
+        : `✅ <b>口径已对齐</b>：用前一交易日截至 ${sm.hm} 的分钟成交额累加，与今日同一时刻累计值直接比较，盘中也能看量能是放大还是萎缩。${sm.live?"":"（基准为你手动填入）"}${[0,6].indexOf(new Date().getDay())>=0?" 今天是周末，行情为最近交易日数据。":""}`)
+    : `⚠️ 同时段基准尚未取到，暂时用前一交易日<b>全天</b>成交额对比，盘中口径不可比。点「刷新实时行情」重试，或直接在上方填入前日同一时段数值。`;
+  document.getElementById("quoteStatus").textContent = q && q.live
+    ? `在线 · ${q.time}${aligned?" · 同时段对齐":""}` : (q && q.failed ? "在线行情不可用 · 用快照" : "快照数据");
+}
+
+/* JSONP 拉取实时行情：不受 file:// 跨域限制 */
+window.fetchQuote = function(){
+  const cbName = "__pbecQ" + Date.now();
+  const s = document.createElement("script");
+  let done = false;
+  const finish = ()=>{ if(done) return; done = true; clearTimeout(tm); try{ delete window[cbName]; }catch(e){} if(s.parentNode) s.parentNode.removeChild(s); };
+  const fail = ()=>{ if(done) return; finish(); S.quote = {failed:true}; save(); renderMarket(); };
+  const tm = setTimeout(fail, 8000);
+  window[cbName] = res => {
+    if(done) return;
+    try{
+      const d = res.data.diff, sh = d.find(x=>x.f12==="000001"), sz = d.find(x=>x.f12==="399001");
+      const amt = +((sh.f6 + sz.f6)/1e8).toFixed(2);
+      const fundNet = +(((Number(sh.f62)||0) + (Number(sz.f62)||0))/1e8).toFixed(2);
+      S.quote = { amount:amt, shPct:sh.f3, szPct:sz.f3, fundNet:fundNet,
+                  time:new Date().toLocaleTimeString("zh-CN",{hour12:false}), live:true };
+      finish(); save(); renderMarket(); archiveMarket();
+    }catch(e){ fail(); }
+  };
+  s.onerror = fail;
+  s.src = "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&secids=1.000001,0.399001"
+        + "&fields=f2,f3,f6,f12,f14,f62&cb=" + cbName;
+  document.head.appendChild(s);
+};
+
+/* JSONP 拉取两市「前一交易日分钟成交额」，用于同时段对比 */
+window.fetchSameTime = function(){
+  const today = todayStr();
+  if(S.sameTime && S.sameTime.series && S.sameTime.cacheDate === today){ renderMarket(); return; }
+  const secs = ["1.000001","0.399001"], series = {};
+  let got = 0, finished = false;
+  const tm = setTimeout(()=>{
+    if(finished) return; finished = true;
+    if(!S.sameTime || !S.sameTime.series){ S.sameTime = {failed:true}; save(); renderMarket(); }
+  }, 9000);
+  secs.forEach((sec,idx)=>{
+    const cbName = "__pbecT" + idx + "_" + Date.now();
+    const s = document.createElement("script");
+    window[cbName] = res => {
+      try{
+        const t = res.data.trends;
+        const dates = [...new Set(t.map(x=>x.split(",")[0].slice(0,10)))];
+        const prevDate = dates[0];
+        const m = {};
+        t.filter(x=>x.indexOf(prevDate) === 0).forEach(row=>{
+          const p = row.split(","), hm = p[0].slice(11,16), v = +p[6] || 0;
+          m[hm] = (m[hm] || 0) + v;
+        });
+        series[idx] = {m, prevDate};
+        got++;
+        if(got === 2){
+          finished = true; clearTimeout(tm);
+          const keys = [...new Set([...Object.keys(series[0].m), ...Object.keys(series[1].m)])].sort();
+          S.sameTime = {
+            cacheDate: today, prevDate: series[0].prevDate,
+            series: keys.map(k=>[k, series[0].m[k]||0, series[1].m[k]||0])
+          };
+          save(); renderMarket(); archiveMarket();
+        }
+      }catch(e){ if(!finished){ finished=true; clearTimeout(tm); S.sameTime={failed:true}; save(); renderMarket(); } }
+      finally{ try{ delete window[cbName]; }catch(e){} if(s.parentNode) s.parentNode.removeChild(s); }
+    };
+    s.onerror = ()=>{ if(!finished){ finished=true; clearTimeout(tm); S.sameTime={failed:true}; save(); renderMarket(); } };
+    s.src = "https://push2his.eastmoney.com/api/qt/stock/trends2/get?secid=" + sec
+          + "&fields1=f1,f2,f3,f4,f5,f6,f7,f8&fields2=f51,f52,f53,f54,f55,f56,f57,f58"
+          + "&iscr=0&ndays=2&cb=" + cbName;
+    document.head.appendChild(s);
+  });
+};
+
+/* ── 历史回看 ── */
+function renderHistory(){
+  const list = getHistory();
+  document.getElementById("histCount").textContent = list.length + " 天记录";
+  const f = (v,suf="") => v==null ? "—" : (typeof v==="number" ? v.toLocaleString("zh-CN")+suf : v);
+  document.getElementById("histBody").innerHTML = list.map((h,i)=>`
+    <tr data-h="${i}">
+      <td><b>${h.date}</b>${h.estimate?' <span class="muted" style="font-size:10px">回算</span>':''}</td>
+      <td><b>${h.score==null?"—":h.score}</b></td>
+      <td>${h.verdict||"—"}</td>
+      <td>${h.dr001==null?"—":h.dr001.toFixed(4)}</td>
+      <td>${h.dr007==null?"—":h.dr007.toFixed(3)}</td>
+      <td>${h.spread==null?"—":fmtBP(h.spread)}</td>
+      <td class="${h.net==null?'':(h.net>=0?'pos':'neg')}">${h.net==null?"—":(h.net>=0?"+":"")+h.net.toLocaleString("zh-CN")}</td>
+      <td>${h.amount==null?"—":num2(h.amount)}</td>
+    </tr>`).join("");
+  document.querySelectorAll("[data-h]").forEach(tr=>{
+    tr.onclick = ()=>{
+      document.querySelectorAll("[data-h]").forEach(x=>x.classList.remove("sel"));
+      tr.classList.add("sel");
+      const h = list[+tr.dataset.h];
+      document.getElementById("histDetail").innerHTML =
+        `<b>${h.date}</b>　评分 <b>${h.score==null?"—":h.score}</b>（${h.verdict||"—"}）
+         ${h.estimate?"· 此分数为按当前模型回算":""}<br>${h.note||"暂无解读"}`;
+    };
+  });
+}
+
+function renderToggle(){
+  document.getElementById("modeV0").className = "btn" + (S.mode==="v0"?" on":"");
+  document.getElementById("modePrice").className = "btn" + (S.mode==="price"?" on":"");
+}
+
+function renderAll(){
+  const r = computeScore();
+  document.getElementById("dataDate").textContent = S._dataDate || "2026-11-06";
+  renderHero(r);
+  renderOps();
+  renderRates();
+  renderFactors();
+  renderBars(r);
+  renderToggle();
+  renderMarket();
+  renderHistory();
+  renderStats();
+}
+
+/* ══════════════ 事件 ══════════════ */
+["policyRate","termPremium","chg001","chg007"].forEach(id=>{
+  const el = document.getElementById(id);
+  el.onchange = ()=>{ S[id] = +el.value||0; save(); renderAll(); };
+});
+document.getElementById("modeV0").onclick = ()=>{ S.mode="v0"; save(); renderAll(); };
+document.getElementById("modePrice").onclick = ()=>{ S.mode="price"; save(); renderAll(); };
+document.getElementById("addRow").onclick = ()=>{
+  S.ops.unshift({date:new Date().toISOString().slice(0,10), type:"隔夜逆回购", amt:0, due:0});
+  save(); renderAll();
+};
+document.getElementById("resetAll").onclick = ()=>{
+  S = JSON.parse(JSON.stringify(DEFAULTS)); save(); syncInputs(); renderAll();
+};
+document.getElementById("whyBtn").onclick = ()=>{
+  const sc = document.getElementById("scoreCard");
+  if(sc.scrollIntoView) sc.scrollIntoView({behavior:"smooth", block:"center"});
+};
+document.getElementById("histBtn").onclick = ()=>{
+  const c = document.getElementById("historyCard");
+  c.classList.toggle("show");
+  document.getElementById("histBtn").textContent = c.classList.contains("show")
+    ? "收起历史回看 ▴" : "历史回看 · 看前几天 ▾";
+  if(c.classList.contains("show") && c.scrollIntoView) c.scrollIntoView({behavior:"smooth", block:"start"});
+};
+document.getElementById("quoteRefresh").onclick = ()=>{ window.fetchQuote(); window.fetchSameTime(); };
+document.getElementById("mktInput").onchange = e=>{
+  const v = +e.target.value || 0;
+  if(S.quote) S.quote.amount = v; else S.market.amount = v;
+  save(); renderMarket();
+};
+document.getElementById("mktSame").onchange = e=>{
+  const v = +e.target.value;
+  if(!S.sameTime) S.sameTime = {};
+  S.sameTime.manualAt = v;
+  S.sameTime.manual = true;
+  save(); renderMarket();
+};
+document.getElementById("mktPrev").onchange = e=>{
+  S.market.prevAmount = +e.target.value || 0; save(); renderMarket();
+};
+
+function syncInputs(){
+  document.getElementById("policyRate").value = S.policyRate;
+  document.getElementById("termPremium").value = S.termPremium;
+  document.getElementById("chg001").value = S.chg001;
+  document.getElementById("chg007").value = S.chg007;
+}
+
+/* 初始化 */
+syncInputs();
+archiveToday(computeScore());   // 每天打开自动归档当日快照
+renderAll();
+window.fetchQuote();            // 打开时拉一次实时行情（成功后归档市场表现样本）
+window.fetchSameTime();         // 打开时拉前一交易日分钟成交额（同时段基准）
+setInterval(()=>{ window.fetchQuote(); renderMarket(); }, 5*60*1000);   // 每5分钟刷新并按新时刻重算同时段
+</script>
+</body>
+</html>
