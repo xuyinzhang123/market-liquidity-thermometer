@@ -2,8 +2,12 @@ name: update-data
 
 on:
   schedule:
-    # UTC 10:23 / 11:23 = 北京时间每天 18:23 / 19:23，第二次补跑。
-    - cron: '23 10,11 * * *'
+    # UTC -> 北京时间：工作日 09:25、10:30；每天 16:30、18:23 收盘/补跑。
+    # 09:25 尚无当天成交则保留快照；这不是央行公告或利率自动采集。
+    - cron: '25 1 * * 1-5'
+    - cron: '30 2 * * 1-5'
+    - cron: '30 8 * * *'
+    - cron: '23 10 * * *'
   workflow_dispatch:
   push:
     branches: [main]
@@ -37,7 +41,7 @@ jobs:
           npm run build
           npm test
           npm run check
-      - name: 更新最新收盘行情（不推进流动性日期）
+      - name: 更新盘中或收盘成交额（不推进流动性日期）
         run: node scripts/auto-market.mjs
       - name: 重新构建并验证
         run: |
@@ -54,7 +58,7 @@ jobs:
             echo "行情无变化，不提交、不部署"
             echo "updated=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "chore: update closing market snapshot"
+            git commit -m "chore: update market snapshot"
             git push
             echo "updated=true" >> "$GITHUB_OUTPUT"
           fi
@@ -66,7 +70,7 @@ jobs:
         if: always()
         run: |
           echo "### 每日行情更新" >> "$GITHUB_STEP_SUMMARY"
-          echo "自动更新沪深成交额及前一交易日基准。央行操作和银行间利率仍需核对录入，流动性日期、评分和统计不会因行情更新而推进。接口失败时保留原快照。" >> "$GITHUB_STEP_SUMMARY"
+          echo "自动更新沪深盘中/收盘成交额；开盘前无当天成交则保留快照。央行操作和银行间利率仍需核对录入，流动性日期、评分和统计不会因行情更新而推进。接口失败时保留原快照。" >> "$GITHUB_STEP_SUMMARY"
 
   # GITHUB_TOKEN 提交不会触发另一条 push CI，故在同一流程里部署。
   deploy:
