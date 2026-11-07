@@ -20,6 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # 排队期间定时任务可能已提交新行情；主分支发布必须使用最新快照。
+          # PR 仍检验它自己的提交，避免用 main 掩盖改动。
+          ref: ${{ github.event_name == 'pull_request' && github.sha || 'main' }}
 
       - uses: actions/setup-node@v4
         with:
@@ -51,3 +55,4 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
