@@ -6,9 +6,10 @@
   "license": "MIT",
   "scripts": {
     "build": "node build-online.js",
-    "test": "node verify-online.js",
+    "test": "node verify-online.js && node --test scripts/auto-market.test.mjs",
     "check": "node scripts/update-data.mjs --offline --check",
-    "update": "node scripts/update-data.mjs"
+    "update": "node scripts/update-data.mjs",
+    "update:market": "node scripts/auto-market.mjs"
   },
   "engines": {
     "node": ">=18"

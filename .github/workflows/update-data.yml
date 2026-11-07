@@ -1,58 +1,84 @@
 name: update-data
 
-# 手动触发，不设定时调度：公开行情接口无固定 SLA，
-# 在 CI 出口 IP 上可能被限流，失败属预期，此时请在本地运行 npm run update。
-# 另外 data/manual-input.json 被 .gitignore 忽略，CI 里没有当天的人工录入，
-# 脚本会主动拒绝写入（防止把旧数据标成今天）——这也属于预期，请在本地更新。
 on:
+  schedule:
+    # UTC 10:23 / 11:23 = 北京时间每天 18:23 / 19:23，第二次补跑。
+    - cron: '23 10,11 * * *'
   workflow_dispatch:
-    inputs:
-      date:
-        description: '数据日期 YYYY-MM-DD（留空=当天；仅接受当天，无法补录历史行情）'
-        required: false
-        type: string
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-data.yml'
+      - 'scripts/auto-market.mjs'
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   refresh:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      updated: ${{ steps.commit.outputs.updated }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: 拉取行情并更新 data.js
-        env:
-          INPUT_DATE: ${{ inputs.date }}
+      - name: 校验与安全回归
         run: |
-          if [ -n "$INPUT_DATE" ]; then
-            case "$INPUT_DATE" in
-              [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
-              *) echo "日期格式不合法（需 YYYY-MM-DD）" >&2; exit 1 ;;
-            esac
-            node scripts/update-data.mjs --date "$INPUT_DATE"
-          else
-            node scripts/update-data.mjs
-          fi
-
+          npm run build
+          npm test
+          npm run check
+      - name: 更新最新收盘行情（不推进流动性日期）
+        run: node scripts/auto-market.mjs
       - name: 重新构建并验证
         run: |
           npm run build
           npm test
           npm run check
-
-      - name: 提交更新
+      - name: 提交行情更新
+        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data.js dist/
           if git diff --cached --quiet; then
-            echo "数据无变化，跳过提交"
+            echo "行情无变化，不提交、不部署"
+            echo "updated=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "chore: refresh market data snapshot"
+            git commit -m "chore: update closing market snapshot"
             git push
+            echo "updated=true" >> "$GITHUB_OUTPUT"
           fi
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.commit.outputs.updated == 'true'
+        with:
+          path: dist
+      - name: 更新范围说明
+        if: always()
+        run: |
+          echo "### 每日行情更新" >> "$GITHUB_STEP_SUMMARY"
+          echo "自动更新沪深成交额及前一交易日基准。央行操作和银行间利率仍需核对录入，流动性日期、评分和统计不会因行情更新而推进。接口失败时保留原快照。" >> "$GITHUB_STEP_SUMMARY"
+
+  # GITHUB_TOKEN 提交不会触发另一条 push CI，故在同一流程里部署。
+  deploy:
+    if: needs.refresh.outputs.updated == 'true'
+    needs: refresh
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

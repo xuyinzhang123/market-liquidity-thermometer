@@ -337,7 +337,7 @@
 
 <div class="foot" style="text-align:center;margin-top:18px">
   本页为个人研究原型，评分规则是简化的经验法则，不构成投资建议。数据以中国人民银行官网公告为准，可手动持续录入。<br>
-  当前数据快照：<span id="dataDate">2026-11-06</span>（由每日自动化任务更新 data.js） · 页面构建 20261106-b2
+  流动性数据日期：<span id="dataDate">2026-11-06</span> · <span id="snapshotNotice">股市行情定时更新，流动性数据需人工核对。</span>
 </div>
 
 </div>
@@ -979,6 +979,11 @@ function renderToggle(){
 function renderAll(){
   const r = computeScore();
   document.getElementById("dataDate").textContent = S._dataDate || "2026-11-06";
+  const notice = document.getElementById("snapshotNotice");
+  notice.textContent = `成交额快照：${S.market.date}。` + (dataIsFresh()
+    ? "股市行情定时更新，流动性数据需人工核对。"
+    : "流动性数据不是今天，当前分数基于旧快照；暂停当日归档。");
+  notice.style.color = dataIsFresh() ? "" : "#b45309";
   renderHero(r);
   renderOps();
   renderRates();
