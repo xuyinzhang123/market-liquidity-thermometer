@@ -31,6 +31,7 @@
   /* ── 温度计首屏 ── */
   .hero{background:linear-gradient(180deg,#fff,#fbfcfe);text-align:center;padding:26px 22px 22px}
   .hero .kicker{font-size:12px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+  .hero .score-modes{justify-content:center;margin:14px 0 4px;gap:8px}
   .score{font-size:64px;font-weight:800;line-height:1.05;letter-spacing:-2px;
          font-variant-numeric:tabular-nums;margin:6px 0 0}
   .score span{font-size:18px;font-weight:500;color:var(--muted);letter-spacing:0}
@@ -157,6 +158,12 @@
   <div class="kicker">今日银行间流动性</div>
   <div class="score" id="scoreBig">--<span> / 100</span></div>
   <div class="verdict" id="verdictPill">计算中</div>
+
+  <div class="toggle score-modes" role="group" aria-label="评分口径">
+    <span class="lbl">评分口径：</span>
+    <button class="btn" id="modeV0" type="button" aria-pressed="false">V0 标准</button>
+    <button class="btn" id="modePrice" type="button" aria-pressed="false">价格优先</button>
+  </div>
 
   <svg class="gauge" width="360" height="86" viewBox="0 0 360 86">
     <defs>
@@ -297,11 +304,7 @@
 <div class="card" id="scoreCard">
   <h2><span class="step">4</span>自动结论 · 评分拆解 <span class="tag">V0 模型</span></h2>
   <div class="lead">四个模块打分后加权求和。中国货币政策框架正从"看数量"转向"看价格"，未来权重会持续向价格侧倾斜——可以手动切换体验两种口径的差异。</div>
-  <div class="toggle">
-    <span class="lbl">评分口径：</span>
-    <button class="btn" id="modeV0">V0 标准 30/40/20/10</button>
-    <button class="btn" id="modePrice">价格优先 15/50/25/10</button>
-  </div>
+  <div class="lead">权重顺序：央行操作 / 资金价格 / 利率趋势 / 特殊因素。V0 标准：30 / 40 / 20 / 10；价格优先：15 / 50 / 25 / 10。切换入口位于顶部评分结果下方。</div>
   <div id="bars"></div>
   <div style="margin-top:6px;font-size:12px;color:var(--muted)" id="scoreSummary">—</div>
 </div>
@@ -974,6 +977,8 @@ function renderHistory(){
 function renderToggle(){
   document.getElementById("modeV0").className = "btn" + (S.mode==="v0"?" on":"");
   document.getElementById("modePrice").className = "btn" + (S.mode==="price"?" on":"");
+  document.getElementById("modeV0").setAttribute("aria-pressed", String(S.mode==="v0"));
+  document.getElementById("modePrice").setAttribute("aria-pressed", String(S.mode==="price"));
 }
 
 function renderAll(){
