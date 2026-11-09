@@ -2,10 +2,12 @@ name: update-data
 
 on:
   schedule:
-    # UTC -> 北京时间：工作日 09:25、10:30；每天 16:30、18:23 收盘/补跑。
-    # 09:25 尚无当天成交则保留快照；这不是央行公告或利率自动采集。
+    # 北京时间：工作日 09:25、10:30、11:45、17:20；每天16:30、18:23补跑。
+    # 上午利率未发布时保留最近完整评分，并发布当天公告和等待原因。
     - cron: '25 1 * * 1-5'
     - cron: '30 2 * * 1-5'
+    - cron: '45 3 * * 1-5'
+    - cron: '20 9 * * 1-5'
     - cron: '30 8 * * *'
     - cron: '23 10 * * *'
   workflow_dispatch:
@@ -14,6 +16,8 @@ on:
     paths:
       - '.github/workflows/update-data.yml'
       - 'scripts/auto-market.mjs'
+      - 'scripts/auto-liquidity.py'
+      - 'scripts/score-snapshot.cjs'
 
 permissions:
   contents: read
@@ -31,18 +35,30 @@ jobs:
       contents: write
     outputs:
       updated: ${{ steps.commit.outputs.updated }}
+      failed: ${{ steps.liquidity.outcome == 'failure' || steps.market.outcome == 'failure' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: 校验与安全回归
         run: |
           npm run build
           npm test
           npm run check
       - name: 更新盘中或收盘成交额（不推进流动性日期）
+        id: market
+        continue-on-error: true
         run: node scripts/auto-market.mjs
+      - name: 采集央行公告及DR加权利率并重算评分
+        id: liquidity
+        continue-on-error: true
+        run: python scripts/auto-liquidity.py
       - name: 重新构建并验证
         run: |
           npm run build
@@ -53,12 +69,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data.js dist/
+          git add data.js data/collection-status.json dist/
           if git diff --cached --quiet; then
             echo "行情无变化，不提交、不部署"
             echo "updated=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "chore: update market snapshot"
+            git commit -m "chore: refresh liquidity score and collection status"
             git push
             echo "updated=true" >> "$GITHUB_OUTPUT"
           fi
@@ -70,7 +86,7 @@ jobs:
         if: always()
         run: |
           echo "### 每日行情更新" >> "$GITHUB_STEP_SUMMARY"
-          echo "自动更新沪深盘中/收盘成交额；开盘前无当天成交则保留快照。央行操作和银行间利率仍需核对录入，流动性日期、评分和统计不会因行情更新而推进。接口失败时保留原快照。" >> "$GITHUB_STEP_SUMMARY"
+          echo "自动采集央行常规质押逆回购公告、DR001/DR007加权利率及历史趋势。只发布日期对齐的评分；缺数保留原评分并发布 collection-status.json。买断式/MLF等不在自动操作口径内；R缺失不以旧值替代，日历因素为简化假设。" >> "$GITHUB_STEP_SUMMARY"
 
   # GITHUB_TOKEN 提交不会触发另一条 push CI，故在同一流程里部署。
   deploy:
@@ -86,3 +102,12 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  report-failure:
+    needs: [refresh, deploy]
+    if: always() && needs.refresh.outputs.failed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "公开数据采集失败；已保留最近有效快照。请查看 refresh 步骤和 collection-status.json。"
+          exit 1

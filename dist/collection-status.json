@@ -1,0 +1,20 @@
+{
+  "attemptDate": "2026-11-09",
+  "lastScoreDate": "2026-11-09",
+  "state": "updated",
+  "missing": [],
+  "latestAnnouncement": {
+    "date": "2026-11-09",
+    "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026110908582629771/index.html",
+    "operations": [
+      {
+        "date": "2026-11-09",
+        "term": 1,
+        "amt": 1820.0,
+        "rate": 1.25,
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026110908582629771/index.html"
+      }
+    ]
+  },
+  "rateTime": "2026-11-09 17:00"
+}

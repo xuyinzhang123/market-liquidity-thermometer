@@ -29,3 +29,4 @@ _t_*.py
 data/manual-input.json
 data/provenance.json
 data/*.tmp
+__pycache__/

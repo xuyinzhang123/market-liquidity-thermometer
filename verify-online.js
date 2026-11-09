@@ -61,9 +61,9 @@ const check = (name, cond, extra) => {
   console.log((cond ? '  [PASS] ' : '  [FAIL] ') + name + (extra ? '  → ' + extra : ''));
 };
 
-const MS = D.marketStats || [];
+const MS = (D.marketStats || []).filter(s=>(s.method||'legacy')===(D.collection?.method||'legacy'));
 const expScore = (D.history || []).find(h => h.date === D.date && h.score != null);
-const msSrc = MS.find(x => x.shPct != null) || MS[0] || {};
+const msSrc = MS.find(x => x.date===D.date && (x.mode||'v0')==='v0') || {};
 
 console.log('=== 1. 首次加载：评分未漂移、旧脏样本被迁移 ===');
 const dirty = {
@@ -145,4 +145,9 @@ check('切口径后两条历史并存、不互相覆盖',
   'n=' + histToday.length + ' keys=' + histToday.map(h => e.api.msKey(h)).join(','));
 
 console.log('\n结果：' + pass + ' 通过 / ' + fail + ' 失败');
+const scoped = load({'pboc_thermo_schema':'2'});
+scoped.LS['pboc_market_stats'] = JSON.stringify([{date:D.date,mode:'v0',method:D.collection?.method||'legacy',shPct:1.23,fundNet:45}]);
+scoped.ctx.archiveMarket();
+check('同日已取得行情不被缺失值覆盖（固定非空样本）', scoped.ctx.getMarketStats().some(s=>s.date===D.date&&s.shPct===1.23&&s.fundNet===45));
+try{ scoped.ctx.renderAll(); check('缺失可选R利率时页面仍能完整渲染',true); }catch(error){check('缺失可选R利率时页面仍能完整渲染',false,error.message);}
 process.exit(fail ? 1 : 0);

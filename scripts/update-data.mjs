@@ -122,7 +122,11 @@ function validate(D, prev) {
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(D.date)) fail('date 格式应为 YYYY-MM-DD');
   num(D.policyRate, 0, 10, 'policyRate');
-  for (const k of ['dr001', 'dr007', 'r001', 'r007']) num(D[k], 0, 10, k);
+  for (const k of ['dr001', 'dr007']) num(D[k], 0, 10, k);
+  for (const k of ['r001', 'r007']) {
+    if (D[k] == null && D.collection?.missingOptional?.includes(k.toUpperCase())) continue;
+    num(D[k], 0, 10, k);
+  }
   for (const k of ['chg001', 'chg007']) num(D[k], -300, 300, k);
   if (!Array.isArray(D.ops) || D.ops.length > 20) fail('ops 必须是数组且不超过 20 条');
   for (const o of D.ops) {

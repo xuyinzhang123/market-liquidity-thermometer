@@ -157,6 +157,7 @@
 <div class="card hero">
   <div class="kicker">银行间流动性评分</div>
   <div id="scoreDataNotice" role="status" style="font-size:13px;margin:8px auto;max-width:680px">正在确认评分数据日期…</div>
+  <div id="collectionStatus" role="status" style="font-size:12px;color:#b45309;margin:6px auto;max-width:680px"></div>
   <div class="score" id="scoreBig">--<span> / 100</span></div>
   <div class="verdict" id="verdictPill">计算中</div>
 
@@ -347,44 +348,80 @@
 </div>
 
 <script>
-/* 市场流动性温度计 · 股市行情自动更新，流动性数据日期单独保留。 */
+/* 自动采集：来源、时间、口径见 collection；不把旧数据标成当天。 */
 window.PBEC_DATA = {
-  "date": "2026-11-06",
+  "date": "2026-11-09",
   "rev": 1,
   "policyRate": 1.25,
   "termPremium": 10,
-  "dr001": 1.26,
-  "dr007": 1.32,
-  "r001": 1.285,
-  "r007": 1.355,
-  "chg001": -8,
-  "chg007": -5,
+  "dr001": 1.31,
+  "dr007": 1.358,
+  "r001": null,
+  "r007": null,
+  "chg001": 2.16,
+  "chg007": -0.55,
   "factors": {
     "tax": false,
     "monthEnd": false,
     "quarter": false,
     "festival": false,
-    "bond": true,
+    "bond": false,
     "fiscal": false
   },
   "ops": [
     {
+      "date": "2026-11-09",
+      "type": "隔夜逆回购",
+      "amt": 1820.0,
+      "due": 2260.0
+    },
+    {
+      "date": "2026-11-06",
+      "type": "隔夜逆回购",
+      "amt": 2260.0,
+      "due": 2630.0
+    },
+    {
       "date": "2026-11-06",
       "type": "7天逆回购",
-      "amt": 2575,
-      "due": 7720
+      "amt": 0,
+      "due": 150.0
     },
     {
       "date": "2026-11-05",
       "type": "隔夜逆回购",
-      "amt": 2630,
-      "due": 3725
+      "amt": 2630.0,
+      "due": 2575.0
     },
     {
       "date": "2026-11-05",
-      "type": "买断式逆回购（3个月）",
-      "amt": 3000,
-      "due": 5000
+      "type": "7天逆回购",
+      "amt": 0,
+      "due": 1150.0
+    },
+    {
+      "date": "2026-11-04",
+      "type": "隔夜逆回购",
+      "amt": 2575.0,
+      "due": 6210.0
+    },
+    {
+      "date": "2026-11-04",
+      "type": "7天逆回购",
+      "amt": 0,
+      "due": 1510.0
+    },
+    {
+      "date": "2026-11-03",
+      "type": "隔夜逆回购",
+      "amt": 6210.0,
+      "due": 5410.0
+    },
+    {
+      "date": "2026-11-03",
+      "type": "7天逆回购",
+      "amt": 0,
+      "due": 4120.0
     }
   ],
   "market": {
@@ -396,17 +433,17 @@ window.PBEC_DATA = {
   },
   "history": [
     {
-      "date": "2026-11-06",
-      "score": 40.5,
-      "verdict": "中性",
-      "dr001": 1.26,
-      "dr007": 1.32,
-      "spread": -3,
-      "net": -5145,
-      "amount": null,
+      "date": "2026-11-04",
+      "score": null,
+      "verdict": "—",
+      "dr001": 1.2591,
+      "dr007": null,
+      "spread": null,
+      "net": null,
+      "amount": 20369.97,
       "amountChg": null,
-      "estimate": false,
-      "note": "央行单日净回笼 5145 亿；DR001 贴政策利率、较月均回落，价格信号显示资金面平稳偏松。"
+      "estimate": true,
+      "note": "DR001 报 1.2591%，为近 4 个月最低；央行公告将于 11-05 开展 3000 亿买断式逆回购。成交额由 11-05 环比数据倒推，仅供参照。"
     },
     {
       "date": "2026-11-05",
@@ -422,17 +459,43 @@ window.PBEC_DATA = {
       "note": "央行净回笼 1095 亿；两市成交 21,173.89 亿、较前日 +803.92 亿（+3.9%）；买断式逆回购 3000 亿缩量续作。分数为按当前模型回算。"
     },
     {
-      "date": "2026-11-04",
-      "score": null,
-      "verdict": "—",
-      "dr001": 1.2591,
-      "dr007": null,
-      "spread": null,
-      "net": null,
-      "amount": 20369.97,
+      "date": "2026-11-06",
+      "score": 40.5,
+      "verdict": "中性",
+      "dr001": 1.26,
+      "dr007": 1.32,
+      "spread": -3,
+      "net": -5145,
+      "amount": null,
       "amountChg": null,
-      "estimate": true,
-      "note": "DR001 报 1.2591%，为近 4 个月最低；央行公告将于 11-05 开展 3000 亿买断式逆回购。成交额由 11-05 环比数据倒推，仅供参照。"
+      "estimate": false,
+      "note": "央行单日净回笼 5145 亿；DR001 贴政策利率、较月均回落，价格信号显示资金面平稳偏松。"
+    },
+    {
+      "date": "2026-11-09",
+      "mode": "v0",
+      "score": 33.8,
+      "verdict": "偏紧",
+      "net": -440,
+      "spread": 0.8,
+      "dr001": 1.31,
+      "dr007": 1.358,
+      "estimate": false,
+      "method": "auto-repo-v1",
+      "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-09 17:00 加权利率，日终"
+    },
+    {
+      "date": "2026-11-09",
+      "mode": "price",
+      "score": 41,
+      "verdict": "中性",
+      "net": -440,
+      "spread": 0.8,
+      "dr001": 1.31,
+      "dr007": 1.358,
+      "estimate": false,
+      "method": "auto-repo-v1",
+      "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-09 17:00 加权利率，日终"
     }
   ],
   "marketStats": [
@@ -445,8 +508,151 @@ window.PBEC_DATA = {
       "fundNet": -431.19,
       "amountChg": -3432.95,
       "note": "盘中快照（11:30）：两市主力资金净流出 431.19 亿；成交额较前日同时段 -3,432.95 亿。"
+    },
+    {
+      "date": "2026-11-09",
+      "mode": "v0",
+      "method": "auto-repo-v1",
+      "score": 33.8,
+      "state": "偏紧",
+      "shPct": null,
+      "szPct": null,
+      "fundNet": null,
+      "amountChg": null,
+      "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
+    },
+    {
+      "date": "2026-11-09",
+      "mode": "price",
+      "method": "auto-repo-v1",
+      "score": 41,
+      "state": "中性",
+      "shPct": null,
+      "szPct": null,
+      "fundNet": null,
+      "amountChg": null,
+      "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
     }
-  ]
+  ],
+  "collection": {
+    "method": "auto-repo-v1",
+    "rateTime": "2026-11-09 17:00",
+    "ratePhase": "日终",
+    "trendBaseDate": "2026-11-02",
+    "operationScope": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖",
+    "factorScope": "税期14–18日、月/季末最后4个自然日为日历假设；春节、政府债和财政因素未自动判定，取中性",
+    "missingOptional": [
+      "R001",
+      "R007"
+    ],
+    "sources": {
+      "rates": "https://www.chinamoney.com.cn/r/cms/www/chinamoney/data/currency/prr-md.json",
+      "rateHistory": "https://www.chinamoney.com.cn/r/cms/www/chinamoney/data/currency/prr-chrt.csv",
+      "operations": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/index.html"
+    },
+    "announcements": [
+      {
+        "date": "2026-11-09",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026110908582629771/index.html",
+        "sha256": "0f17006c4f865655d104dc0740f31dbcd6dcacf14d5ab6ed8553f3a2b5eb5c4e"
+      },
+      {
+        "date": "2026-11-06",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026110609100813149/index.html",
+        "sha256": "c01470c56458c9f630c5c7572b0797288777fc00d2e1bd5a68f6061a9293d90e"
+      },
+      {
+        "date": "2026-11-05",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026110509101362150/index.html",
+        "sha256": "d09eb75b3dbd67ff64aa6fdee92883105c4cdf4d565b259d5b36220e08332af2"
+      },
+      {
+        "date": "2026-11-04",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026110408563592581/index.html",
+        "sha256": "65b77e7666f21290abfc4f07c64d39803c7728528ac61b4d7ca12e2abb675af3"
+      },
+      {
+        "date": "2026-11-03",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026110309140391220/index.html",
+        "sha256": "f30ac86ff391cf0561a83d12f82d5616c6aac92848849ba42d4abd17da24e7c5"
+      },
+      {
+        "date": "2026-11-02",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026110208540841613/index.html",
+        "sha256": "265433791f3f215b2f5cecfd6c7e4718dde228f10f9750634a5423f8745a37a6"
+      },
+      {
+        "date": "2026-10-30",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026103008462393538/index.html",
+        "sha256": "35739d40ba49a9cf03980ca0b297cd65d0d6d59ec6ed49e3d9a87712b322d5fd"
+      },
+      {
+        "date": "2026-10-29",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026102908501935376/index.html",
+        "sha256": "383470d77e562b1aaf50c257e88dcedc49c7aa281b63b62f2704c112030a1a5a"
+      },
+      {
+        "date": "2026-10-28",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026102808465912088/index.html",
+        "sha256": "5586821af9af0f810bb8affae5b26b2c984d70ea68c68b5d60759ccab24dced0"
+      },
+      {
+        "date": "2026-10-27",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026102708510355509/index.html",
+        "sha256": "a2e020ab07aef997fe37a3e272902b4d02b7b92a729ff78259da3cd6fe277020"
+      },
+      {
+        "date": "2026-10-26",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026102608470458194/index.html",
+        "sha256": "678481f9e1f92649fdaed186d346a2e2cf7d6f9077fc266791fad33e14e056d1"
+      },
+      {
+        "date": "2026-10-23",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026102308535522110/index.html",
+        "sha256": "702ee4ddf7c6f50a18aecac31dc8f2ad9afe55b8550cdeb949ada53e7bb2f043"
+      },
+      {
+        "date": "2026-10-22",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026102208470683333/index.html",
+        "sha256": "49a0de055beb08abc3c0468bab4964eceeb2d4f2b5559f8006a6e6bf199f358f"
+      },
+      {
+        "date": "2026-10-21",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026102108590198583/index.html",
+        "sha256": "892d695cd9caa84327173d8ba1da66b43543be13d40ebf0e95edaff018cd4128"
+      },
+      {
+        "date": "2026-10-20",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026102008563058059/index.html",
+        "sha256": "87c75f1f2345287e21a05ec6390d4973d08848df20a1e6167c7b23118622fcd3"
+      },
+      {
+        "date": "2026-10-19",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026101908495975924/index.html",
+        "sha256": "e73702a3e2c1c180d370286ce044bfab20c6e899e2bb2f6150b3d4911ded53f3"
+      },
+      {
+        "date": "2026-10-16",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026101608495821786/index.html",
+        "sha256": "2ab9cb40be870a1ef30cec55bb343f9ce88a80431d4a768d98e679428aa8f644"
+      },
+      {
+        "date": "2026-10-15",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026101508552484698/index.html",
+        "sha256": "e8e54e5b77d55f173c2560039a0989bd56cf425bc9a9626bcb9043195ba5a45b"
+      },
+      {
+        "date": "2026-10-14",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026101408462382153/index.html",
+        "sha256": "edc930af694977e7f2771b69b766322bb3796d755f87a9bfec81df06970faa4b"
+      },
+      {
+        "date": "2026-10-13",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026101308450595979/index.html",
+        "sha256": "41bde9e7ce190e78e417a5c086777deebb174a18433763641b9f3caca78f4b97"
+      }
+    ]
+  }
 };
 
 </script>
@@ -457,9 +663,7 @@ const SCHEMA_KEY = "pboc_thermo_schema";
 const SCHEMA = "2";   // 2026-11-06：归档日期改用真实日历日、样本按评分口径分组
 /* 本地日历日；不能用 toISOString()（UTC，北京时间 08:00 前会退回前一天） */
 function todayStr(){
-  const d = new Date();
-  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0")
-       + "-" + String(d.getDate()).padStart(2,"0");
+  return new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
 }
 const DEFAULTS = {
   policyRate: 1.25,      // 隔夜逆回购（主要政策利率，2026-11-02 起）
@@ -477,7 +681,7 @@ const DEFAULTS = {
   quote: null,
   sameTime: null
 };
-const OPS_TYPES = ["隔夜逆回购","7天逆回购","买断式逆回购（3个月）","买断式逆回购（6个月）",
+const OPS_TYPES = ["隔夜逆回购","7天逆回购","14天逆回购","28天逆回购","63天逆回购","买断式逆回购（3个月）","买断式逆回购（6个月）",
                    "MLF","国库现金定存","国债买入","国债卖出","降准","其他"];
 
 const FACTORS = [
@@ -500,16 +704,16 @@ try{ const raw = store.getItem(LS); if(raw){ const o=JSON.parse(raw); S={...S,..
 /* 外部数据文件（自动化每日更新 data.js）：按「内容签名」采纳。
    旧逻辑只比 date，同一天内的数据修正永远不生效；现在任何关键字段变化
    （含同日修正、rev 递增）都会重新采纳，且 data.js 不变时不会覆盖用户手动调参。 */
-if(window.PBEC_DATA && window.PBEC_DATA.date){
-  const D = window.PBEC_DATA;
+function adoptSnapshot(D){
+  if(!D || !D.date) return;
   const sig = [D.date, D.rev||0, D.updatedAt||"",
                D.policyRate, D.termPremium, D.dr001, D.dr007, D.r001, D.r007,
                D.chg001, D.chg007,
                JSON.stringify(D.ops||[]), JSON.stringify(D.factors||{}),
-               JSON.stringify(D.market||{})].join("|");
+               JSON.stringify(D.market||{}), JSON.stringify(D.collection||{})].join("|");
   if(sig !== S._dataSig){
     ["policyRate","termPremium","dr001","dr007","r001","r007","chg001","chg007"].forEach(k=>{
-      if(D[k]!=null) S[k]=D[k];
+      if(D[k]!=null || ((k==="r001"||k==="r007") && D[k]===null)) S[k]=D[k];
     });
     if(Array.isArray(D.ops) && D.ops.length) S.ops = D.ops;
     if(D.factors) S.factors = {...DEFAULTS.factors, ...D.factors};
@@ -519,10 +723,12 @@ if(window.PBEC_DATA && window.PBEC_DATA.date){
     save();
   }
 }
+adoptSnapshot(window.PBEC_DATA);
 /* 历史数据：外部 history 与本地每日归档合并（按评分口径隔离，与 marketStats 一致） */
 const HS = "pboc_thermo_history";
 /* date|mode：切换评分口径时两条历史各自保留，不互相覆盖 */
-const msKey = d => d.date + "|" + (d.mode || "v0");
+const msKey = d => d.date + "|" + (d.mode || "v0") + "|" + (d.method || "legacy");
+const currentMethod = () => window.PBEC_DATA?.collection?.method || "legacy";
 /* 断更保护：只有数据快照日期等于本机日历日，才允许生成「当日实算」记录。
    否则会把旧快照的分数标成今天，或把旧分数与新行情配成统计样本。 */
 function dataIsFresh(){
@@ -536,13 +742,13 @@ function getHistory(){
   const map = {};
   ((window.PBEC_DATA && window.PBEC_DATA.history) || []).forEach(h=>{ map[msKey(h)] = h; });
   local.forEach(h=>{ const k = msKey(h); map[k] = {...(map[k]||{}), ...nonNull(h)}; });
-  return Object.values(map).sort((a,b)=> a.date < b.date ? 1 : -1);
+  return Object.values(map).filter(h=>(h.method||"legacy")===currentMethod()).sort((a,b)=> a.date < b.date ? 1 : -1);
 }
 function archiveToday(r){
   if(!dataIsFresh()) return getHistory();   // 断更：不写入伪「当天」记录
   const list = getHistory();
   const snap = {
-    date: todayStr(), mode: S.mode || "v0",
+    date: todayStr(), mode: S.mode || "v0", method:currentMethod(),
     score:+r.total.toFixed(1), verdict: verdictOf(r.total).t,
     dr001:S.dr001, dr007:S.dr007, spread:+r.spread7.toFixed(1), net:r.st.todayNet,
     amount: (S.quote && S.quote.amount) || S.market.amount,
@@ -580,7 +786,7 @@ function getMarketStats(){
     const k = msKey(d);
     map[k] = {...(map[k]||{}), ...nonNull(d)};   // null 不覆盖 data.js 的真值
   });
-  return Object.values(map).sort((a,b)=> a.date < b.date ? -1 : (a.date > b.date ? 1 : 0));
+  return Object.values(map).filter(h=>(h.method||"legacy")===currentMethod()).sort((a,b)=> a.date < b.date ? -1 : (a.date > b.date ? 1 : 0));
 }
 function archiveMarket(){
   if(!dataIsFresh()) return;   // 断更：不把旧流动性分数与新行情配成样本
@@ -588,6 +794,7 @@ function archiveMarket(){
   const rec = {
     date: todayStr(),                  // 真实日历日，不用数据快照日
     mode: S.mode || "v0",              // 口径不同的样本分开存，不混进同一条曲线
+    method:currentMethod(),
     score: +r.total.toFixed(1), state: stateOf(r.total),
     shPct: (q && q.live && q.shPct!=null) ? q.shPct : null,
     szPct: (q && q.live && q.szPct!=null) ? q.szPct : null,
@@ -793,7 +1000,7 @@ function trendHtml(bp){
 function aiSentence(r){
   const st = r.st, v = verdictOf(r.total);
   let s = `${S._dataDate || '未知日期'} 数据显示资金面${v.t}（${Math.round(r.total)}分）。`;
-  s += `央行公开市场当日${st.todayNet>=0?"净投放":"净回笼"}${Math.abs(st.todayNet).toLocaleString()}亿元`;
+  s += `${window.PBEC_DATA?.collection ? '常规质押逆回购' : '央行公开市场'}当日${st.todayNet>=0?"净投放":"净回笼"}${Math.abs(st.todayNet).toLocaleString()}亿元`;
   if(st.streak>1) s += `，已连续${st.streak}日${st.sign>0?"净投放":"净回笼"}`;
   s += "。";
 
@@ -853,12 +1060,12 @@ function renderRates(){
     {n:"R007",  v:S.r007,  d:"全市场7天，看非银拿钱难不难", k:"r007"}
   ];
   document.getElementById("ratesBody").innerHTML = rows.map(r=>{
-    const bp = (r.v - S.policyRate)*100;
+    const bp = r.v==null ? null : (r.v - S.policyRate)*100;
     return `<tr>
       <td style="font-weight:700">${r.n}</td>
-      <td><input type="number" step="0.001" value="${r.v.toFixed(3)}" data-r="${r.k}"></td>
+      <td><input type="number" step="0.001" value="${r.v==null?'':r.v.toFixed(3)}" placeholder="未取得" data-r="${r.k}"></td>
       <td class="muted" style="font-size:12.5px">${r.d}</td>
-      <td class="num ${bp>3?'pos':(bp<-3?'neg':'flat')}">${fmtBP(bp)}</td>
+      <td class="num ${bp>3?'pos':(bp<-3?'neg':'flat')}">${bp==null?'—':fmtBP(bp)}</td>
     </tr>`;
   }).join("");
 
@@ -867,7 +1074,9 @@ function renderRates(){
   });
 
   const tier = (S.r007 - S.dr007)*100;
-  document.getElementById("rateNote").innerHTML = tier>10
+  document.getElementById("rateNote").innerHTML = S.r007==null
+    ? "R007 尚未取得：暂不判断非银分层压力，不用旧值或 DR 利率替代。R 系列不参与当前评分公式。"
+    : tier>10
     ? `⚠️ <b>R007 比 DR007 高 ${tier.toFixed(0)}bp</b>：非银机构借钱明显更贵，流动性出现"分层"——总量或许不缺，但结构性紧张，通常是要警惕的信号。`
     : `R007 比 DR007 高 ${tier.toFixed(0)}bp，属正常范围：非银借钱贵一点是常态，价差没有异常走阔，暂时看不到流动性分层压力。`;
 }
@@ -1089,13 +1298,15 @@ function renderAll(){
   const r = computeScore();
   const scoreNotice = document.getElementById("scoreDataNotice");
   scoreNotice.textContent = `评分数据日期：${S._dataDate || '未知'}。` + (dataIsFresh()
-    ? "已录入当日流动性数据。"
-    : "尚未更新为今天：央行操作与资金利率仍需核对录入。当前为历史快照评分，不代表今天的资金面；成交额更新不会更新该评分。");
+    ? "已取得当日评分数据。"
+    : (window.PBEC_DATA?.collection ? "尚未取得今天日期对齐的完整数据，等待官方更新。当前为最近完整快照评分，不代表今天资金面。" : "尚未更新为今天：央行操作与资金利率仍需核对录入。当前为历史快照评分，不代表今天的资金面；成交额更新不会更新该评分。"));
+  const collection = window.PBEC_DATA && window.PBEC_DATA.collection;
+  if(collection) scoreNotice.textContent += ` 利率截至 ${collection.rateTime}（${collection.ratePhase}）。操作口径：${collection.operationScope}。日历因素：${collection.factorScope}。自动口径与早期手工快照不同，历史分数不宜直接比较。`;
   scoreNotice.style.color = dataIsFresh() ? "#667085" : "#b45309";
   document.getElementById("dataDate").textContent = S._dataDate || "2026-11-06";
   const notice = document.getElementById("snapshotNotice");
   notice.textContent = `成交额快照：${S.market.date}。` + (dataIsFresh()
-    ? "股市行情定时更新，流动性数据需人工核对。"
+    ? (collection ? "央行公告与 DR 利率自动采集；日历因素含简化假设。" : "股市行情定时更新，流动性数据需人工核对。")
     : "流动性数据不是今天，当前分数基于旧快照；暂停当日归档。");
   notice.style.color = dataIsFresh() ? "" : "#b45309";
   renderHero(r);
@@ -1165,6 +1376,32 @@ renderAll();
 window.fetchQuote();            // 打开时拉一次实时行情（成功后归档市场表现样本）
 window.fetchSameTime();         // 打开时拉前一交易日分钟成交额（同时段基准）
 setInterval(()=>{ window.fetchQuote(); renderMarket(); }, 5*60*1000);   // 每5分钟刷新并按新时刻重算同时段
+// Shared by GitHub/Coze/offline copies: JSON only, never execute remote JavaScript.
+async function refreshPublishedSnapshot(){
+  try{
+    const res = await fetch("https://xuyinzhang123.github.io/market-liquidity-thermometer/latest.json", {cache:"no-store",signal:AbortSignal.timeout(12000)});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const D = await res.json();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(D.date||"") || D.date>todayStr() || D.date<(S._dataDate||"")) throw new Error("日期无效或倒退");
+    for(const k of ["policyRate","dr001","dr007"]){if(typeof D[k]!=="number" || !Number.isFinite(D[k]) || D[k]<0 || D[k]>10) throw new Error("利率无效");}
+    for(const k of ["r001","r007"]){if(D[k]!==null && (typeof D[k]!=="number"||!Number.isFinite(D[k])||D[k]<0||D[k]>10)) throw new Error("R利率无效");}
+    if(!Number.isFinite(D.termPremium)||D.termPremium<0||D.termPremium>100||!Array.isArray(D.history)||!Array.isArray(D.marketStats)) throw new Error("结构无效");
+    for(const k of ["chg001","chg007"]){if(typeof D[k]!=="number" || !Number.isFinite(D[k]) || Math.abs(D[k])>300) throw new Error("趋势无效");}
+    if(!Array.isArray(D.ops)||!D.ops.length||!D.ops.every(o=>/^\d{4}-\d{2}-\d{2}$/.test(o.date)&&o.date<=D.date&&[o.amt,o.due].every(n=>typeof n==="number"&&Number.isFinite(n)&&n>=0&&n<=100000))) throw new Error("操作无效");
+    if(!D.market||!/^\d{4}-\d{2}-\d{2}$/.test(D.market.date||"")||!Number.isFinite(D.market.amount)) throw new Error("行情无效");
+    window.PBEC_DATA=D; adoptSnapshot(D); syncInputs(); renderAll();
+  }catch(e){
+    document.getElementById("snapshotNotice").textContent += " 最新数据获取失败，当前显示本地备用快照及其真实日期。";
+  }
+}
+refreshPublishedSnapshot();
+fetch("https://xuyinzhang123.github.io/market-liquidity-thermometer/collection-status.json",{cache:"no-store",signal:AbortSignal.timeout(12000)})
+  .then(r=>r.ok?r.json():null).then(s=>{
+    if(!s) return;
+    const latest=s.latestAnnouncement;
+    document.getElementById("collectionStatus").textContent =
+      (latest?`最近央行公告：${latest.date}。`:"") + (s.state==="updated"?"":`最近采集日期 ${s.attemptDate}，${(s.missing||[]).join('；')}。保留已验证快照。`);
+  }).catch(()=>{});
 </script>
 </body>
 </html>

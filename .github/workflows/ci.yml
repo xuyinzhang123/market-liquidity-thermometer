@@ -28,6 +28,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: 构建 dist/
         run: npm run build
@@ -55,4 +58,3 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
-

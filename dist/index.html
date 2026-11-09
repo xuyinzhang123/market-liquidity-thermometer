@@ -157,6 +157,7 @@
 <div class="card hero">
   <div class="kicker">银行间流动性评分</div>
   <div id="scoreDataNotice" role="status" style="font-size:13px;margin:8px auto;max-width:680px">正在确认评分数据日期…</div>
+  <div id="collectionStatus" role="status" style="font-size:12px;color:#b45309;margin:6px auto;max-width:680px"></div>
   <div class="score" id="scoreBig">--<span> / 100</span></div>
   <div class="verdict" id="verdictPill">计算中</div>
 
@@ -354,9 +355,7 @@ const SCHEMA_KEY = "pboc_thermo_schema";
 const SCHEMA = "2";   // 2026-11-06：归档日期改用真实日历日、样本按评分口径分组
 /* 本地日历日；不能用 toISOString()（UTC，北京时间 08:00 前会退回前一天） */
 function todayStr(){
-  const d = new Date();
-  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0")
-       + "-" + String(d.getDate()).padStart(2,"0");
+  return new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
 }
 const DEFAULTS = {
   policyRate: 1.25,      // 隔夜逆回购（主要政策利率，2026-11-02 起）
@@ -374,7 +373,7 @@ const DEFAULTS = {
   quote: null,
   sameTime: null
 };
-const OPS_TYPES = ["隔夜逆回购","7天逆回购","买断式逆回购（3个月）","买断式逆回购（6个月）",
+const OPS_TYPES = ["隔夜逆回购","7天逆回购","14天逆回购","28天逆回购","63天逆回购","买断式逆回购（3个月）","买断式逆回购（6个月）",
                    "MLF","国库现金定存","国债买入","国债卖出","降准","其他"];
 
 const FACTORS = [
@@ -397,16 +396,16 @@ try{ const raw = store.getItem(LS); if(raw){ const o=JSON.parse(raw); S={...S,..
 /* 外部数据文件（自动化每日更新 data.js）：按「内容签名」采纳。
    旧逻辑只比 date，同一天内的数据修正永远不生效；现在任何关键字段变化
    （含同日修正、rev 递增）都会重新采纳，且 data.js 不变时不会覆盖用户手动调参。 */
-if(window.PBEC_DATA && window.PBEC_DATA.date){
-  const D = window.PBEC_DATA;
+function adoptSnapshot(D){
+  if(!D || !D.date) return;
   const sig = [D.date, D.rev||0, D.updatedAt||"",
                D.policyRate, D.termPremium, D.dr001, D.dr007, D.r001, D.r007,
                D.chg001, D.chg007,
                JSON.stringify(D.ops||[]), JSON.stringify(D.factors||{}),
-               JSON.stringify(D.market||{})].join("|");
+               JSON.stringify(D.market||{}), JSON.stringify(D.collection||{})].join("|");
   if(sig !== S._dataSig){
     ["policyRate","termPremium","dr001","dr007","r001","r007","chg001","chg007"].forEach(k=>{
-      if(D[k]!=null) S[k]=D[k];
+      if(D[k]!=null || ((k==="r001"||k==="r007") && D[k]===null)) S[k]=D[k];
     });
     if(Array.isArray(D.ops) && D.ops.length) S.ops = D.ops;
     if(D.factors) S.factors = {...DEFAULTS.factors, ...D.factors};
@@ -416,10 +415,12 @@ if(window.PBEC_DATA && window.PBEC_DATA.date){
     save();
   }
 }
+adoptSnapshot(window.PBEC_DATA);
 /* 历史数据：外部 history 与本地每日归档合并（按评分口径隔离，与 marketStats 一致） */
 const HS = "pboc_thermo_history";
 /* date|mode：切换评分口径时两条历史各自保留，不互相覆盖 */
-const msKey = d => d.date + "|" + (d.mode || "v0");
+const msKey = d => d.date + "|" + (d.mode || "v0") + "|" + (d.method || "legacy");
+const currentMethod = () => window.PBEC_DATA?.collection?.method || "legacy";
 /* 断更保护：只有数据快照日期等于本机日历日，才允许生成「当日实算」记录。
    否则会把旧快照的分数标成今天，或把旧分数与新行情配成统计样本。 */
 function dataIsFresh(){
@@ -433,13 +434,13 @@ function getHistory(){
   const map = {};
   ((window.PBEC_DATA && window.PBEC_DATA.history) || []).forEach(h=>{ map[msKey(h)] = h; });
   local.forEach(h=>{ const k = msKey(h); map[k] = {...(map[k]||{}), ...nonNull(h)}; });
-  return Object.values(map).sort((a,b)=> a.date < b.date ? 1 : -1);
+  return Object.values(map).filter(h=>(h.method||"legacy")===currentMethod()).sort((a,b)=> a.date < b.date ? 1 : -1);
 }
 function archiveToday(r){
   if(!dataIsFresh()) return getHistory();   // 断更：不写入伪「当天」记录
   const list = getHistory();
   const snap = {
-    date: todayStr(), mode: S.mode || "v0",
+    date: todayStr(), mode: S.mode || "v0", method:currentMethod(),
     score:+r.total.toFixed(1), verdict: verdictOf(r.total).t,
     dr001:S.dr001, dr007:S.dr007, spread:+r.spread7.toFixed(1), net:r.st.todayNet,
     amount: (S.quote && S.quote.amount) || S.market.amount,
@@ -477,7 +478,7 @@ function getMarketStats(){
     const k = msKey(d);
     map[k] = {...(map[k]||{}), ...nonNull(d)};   // null 不覆盖 data.js 的真值
   });
-  return Object.values(map).sort((a,b)=> a.date < b.date ? -1 : (a.date > b.date ? 1 : 0));
+  return Object.values(map).filter(h=>(h.method||"legacy")===currentMethod()).sort((a,b)=> a.date < b.date ? -1 : (a.date > b.date ? 1 : 0));
 }
 function archiveMarket(){
   if(!dataIsFresh()) return;   // 断更：不把旧流动性分数与新行情配成样本
@@ -485,6 +486,7 @@ function archiveMarket(){
   const rec = {
     date: todayStr(),                  // 真实日历日，不用数据快照日
     mode: S.mode || "v0",              // 口径不同的样本分开存，不混进同一条曲线
+    method:currentMethod(),
     score: +r.total.toFixed(1), state: stateOf(r.total),
     shPct: (q && q.live && q.shPct!=null) ? q.shPct : null,
     szPct: (q && q.live && q.szPct!=null) ? q.szPct : null,
@@ -690,7 +692,7 @@ function trendHtml(bp){
 function aiSentence(r){
   const st = r.st, v = verdictOf(r.total);
   let s = `${S._dataDate || '未知日期'} 数据显示资金面${v.t}（${Math.round(r.total)}分）。`;
-  s += `央行公开市场当日${st.todayNet>=0?"净投放":"净回笼"}${Math.abs(st.todayNet).toLocaleString()}亿元`;
+  s += `${window.PBEC_DATA?.collection ? '常规质押逆回购' : '央行公开市场'}当日${st.todayNet>=0?"净投放":"净回笼"}${Math.abs(st.todayNet).toLocaleString()}亿元`;
   if(st.streak>1) s += `，已连续${st.streak}日${st.sign>0?"净投放":"净回笼"}`;
   s += "。";
 
@@ -750,12 +752,12 @@ function renderRates(){
     {n:"R007",  v:S.r007,  d:"全市场7天，看非银拿钱难不难", k:"r007"}
   ];
   document.getElementById("ratesBody").innerHTML = rows.map(r=>{
-    const bp = (r.v - S.policyRate)*100;
+    const bp = r.v==null ? null : (r.v - S.policyRate)*100;
     return `<tr>
       <td style="font-weight:700">${r.n}</td>
-      <td><input type="number" step="0.001" value="${r.v.toFixed(3)}" data-r="${r.k}"></td>
+      <td><input type="number" step="0.001" value="${r.v==null?'':r.v.toFixed(3)}" placeholder="未取得" data-r="${r.k}"></td>
       <td class="muted" style="font-size:12.5px">${r.d}</td>
-      <td class="num ${bp>3?'pos':(bp<-3?'neg':'flat')}">${fmtBP(bp)}</td>
+      <td class="num ${bp>3?'pos':(bp<-3?'neg':'flat')}">${bp==null?'—':fmtBP(bp)}</td>
     </tr>`;
   }).join("");
 
@@ -764,7 +766,9 @@ function renderRates(){
   });
 
   const tier = (S.r007 - S.dr007)*100;
-  document.getElementById("rateNote").innerHTML = tier>10
+  document.getElementById("rateNote").innerHTML = S.r007==null
+    ? "R007 尚未取得：暂不判断非银分层压力，不用旧值或 DR 利率替代。R 系列不参与当前评分公式。"
+    : tier>10
     ? `⚠️ <b>R007 比 DR007 高 ${tier.toFixed(0)}bp</b>：非银机构借钱明显更贵，流动性出现"分层"——总量或许不缺，但结构性紧张，通常是要警惕的信号。`
     : `R007 比 DR007 高 ${tier.toFixed(0)}bp，属正常范围：非银借钱贵一点是常态，价差没有异常走阔，暂时看不到流动性分层压力。`;
 }
@@ -986,13 +990,15 @@ function renderAll(){
   const r = computeScore();
   const scoreNotice = document.getElementById("scoreDataNotice");
   scoreNotice.textContent = `评分数据日期：${S._dataDate || '未知'}。` + (dataIsFresh()
-    ? "已录入当日流动性数据。"
-    : "尚未更新为今天：央行操作与资金利率仍需核对录入。当前为历史快照评分，不代表今天的资金面；成交额更新不会更新该评分。");
+    ? "已取得当日评分数据。"
+    : (window.PBEC_DATA?.collection ? "尚未取得今天日期对齐的完整数据，等待官方更新。当前为最近完整快照评分，不代表今天资金面。" : "尚未更新为今天：央行操作与资金利率仍需核对录入。当前为历史快照评分，不代表今天的资金面；成交额更新不会更新该评分。"));
+  const collection = window.PBEC_DATA && window.PBEC_DATA.collection;
+  if(collection) scoreNotice.textContent += ` 利率截至 ${collection.rateTime}（${collection.ratePhase}）。操作口径：${collection.operationScope}。日历因素：${collection.factorScope}。自动口径与早期手工快照不同，历史分数不宜直接比较。`;
   scoreNotice.style.color = dataIsFresh() ? "#667085" : "#b45309";
   document.getElementById("dataDate").textContent = S._dataDate || "2026-11-06";
   const notice = document.getElementById("snapshotNotice");
   notice.textContent = `成交额快照：${S.market.date}。` + (dataIsFresh()
-    ? "股市行情定时更新，流动性数据需人工核对。"
+    ? (collection ? "央行公告与 DR 利率自动采集；日历因素含简化假设。" : "股市行情定时更新，流动性数据需人工核对。")
     : "流动性数据不是今天，当前分数基于旧快照；暂停当日归档。");
   notice.style.color = dataIsFresh() ? "" : "#b45309";
   renderHero(r);
@@ -1062,6 +1068,32 @@ renderAll();
 window.fetchQuote();            // 打开时拉一次实时行情（成功后归档市场表现样本）
 window.fetchSameTime();         // 打开时拉前一交易日分钟成交额（同时段基准）
 setInterval(()=>{ window.fetchQuote(); renderMarket(); }, 5*60*1000);   // 每5分钟刷新并按新时刻重算同时段
+// Shared by GitHub/Coze/offline copies: JSON only, never execute remote JavaScript.
+async function refreshPublishedSnapshot(){
+  try{
+    const res = await fetch("https://xuyinzhang123.github.io/market-liquidity-thermometer/latest.json", {cache:"no-store",signal:AbortSignal.timeout(12000)});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const D = await res.json();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(D.date||"") || D.date>todayStr() || D.date<(S._dataDate||"")) throw new Error("日期无效或倒退");
+    for(const k of ["policyRate","dr001","dr007"]){if(typeof D[k]!=="number" || !Number.isFinite(D[k]) || D[k]<0 || D[k]>10) throw new Error("利率无效");}
+    for(const k of ["r001","r007"]){if(D[k]!==null && (typeof D[k]!=="number"||!Number.isFinite(D[k])||D[k]<0||D[k]>10)) throw new Error("R利率无效");}
+    if(!Number.isFinite(D.termPremium)||D.termPremium<0||D.termPremium>100||!Array.isArray(D.history)||!Array.isArray(D.marketStats)) throw new Error("结构无效");
+    for(const k of ["chg001","chg007"]){if(typeof D[k]!=="number" || !Number.isFinite(D[k]) || Math.abs(D[k])>300) throw new Error("趋势无效");}
+    if(!Array.isArray(D.ops)||!D.ops.length||!D.ops.every(o=>/^\d{4}-\d{2}-\d{2}$/.test(o.date)&&o.date<=D.date&&[o.amt,o.due].every(n=>typeof n==="number"&&Number.isFinite(n)&&n>=0&&n<=100000))) throw new Error("操作无效");
+    if(!D.market||!/^\d{4}-\d{2}-\d{2}$/.test(D.market.date||"")||!Number.isFinite(D.market.amount)) throw new Error("行情无效");
+    window.PBEC_DATA=D; adoptSnapshot(D); syncInputs(); renderAll();
+  }catch(e){
+    document.getElementById("snapshotNotice").textContent += " 最新数据获取失败，当前显示本地备用快照及其真实日期。";
+  }
+}
+refreshPublishedSnapshot();
+fetch("https://xuyinzhang123.github.io/market-liquidity-thermometer/collection-status.json",{cache:"no-store",signal:AbortSignal.timeout(12000)})
+  .then(r=>r.ok?r.json():null).then(s=>{
+    if(!s) return;
+    const latest=s.latestAnnouncement;
+    document.getElementById("collectionStatus").textContent =
+      (latest?`最近央行公告：${latest.date}。`:"") + (s.state==="updated"?"":`最近采集日期 ${s.attemptDate}，${(s.missing||[]).join('；')}。保留已验证快照。`);
+  }).catch(()=>{});
 </script>
 </body>
 </html>

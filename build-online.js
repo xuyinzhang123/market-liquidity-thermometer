@@ -31,11 +31,16 @@ if (hits !== 1) {
 fs.mkdirSync(DIST, { recursive: true });
 fs.writeFileSync(path.join(DIST, 'index.html'), html, 'utf8');
 fs.writeFileSync(path.join(DIST, 'data.js'), data, 'utf8');
+const box = {window:{}};
+require('node:vm').runInNewContext(data, box, {timeout:1000});
+fs.writeFileSync(path.join(DIST, 'latest.json'), JSON.stringify(box.window.PBEC_DATA, null, 2)+'\n', 'utf8');
+const statusFile = path.join(ROOT,'data','collection-status.json');
+if(fs.existsSync(statusFile)) fs.copyFileSync(statusFile,path.join(DIST,'collection-status.json'));
 
 const safe = data.replace(/<\/script/gi, '<\\/script');
 const online = html.replace(TAG, '<script>\n' + safe + '\n</script>');
 fs.writeFileSync(path.join(DIST, 'online.html'), online, 'utf8');
 
-const date = (data.match(/date:\s*["'](\d{4}-\d{2}-\d{2})["']/) || [null, '?'])[1];
+const date = box.window.PBEC_DATA.date;
 console.log('[OK] dist/online.html  ' + Buffer.byteLength(online, 'utf8') + ' bytes');
 console.log('     data.js 内联 ' + Buffer.byteLength(data, 'utf8') + ' bytes · 数据日期 ' + date);
