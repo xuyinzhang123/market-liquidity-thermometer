@@ -40,7 +40,7 @@
   .gauge{margin:10px auto 0;display:block}
   .ai{max-width:660px;margin:16px auto 0;text-align:left;font-size:13.5px;color:#2f3439;
       background:var(--gray);border-radius:10px;padding:13px 16px;position:relative}
-  .ai:before{content:"今日解读";position:absolute;top:-9px;left:14px;font-size:11px;font-weight:700;
+  .ai:before{content:"快照解读";position:absolute;top:-9px;left:14px;font-size:11px;font-weight:700;
       background:var(--text);color:#fff;padding:1px 8px;border-radius:99px}
 
   .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-top:18px}
@@ -155,7 +155,8 @@
 
 <!-- ═════════ 首屏：温度计 ═════════ -->
 <div class="card hero">
-  <div class="kicker">今日银行间流动性</div>
+  <div class="kicker">银行间流动性评分</div>
+  <div id="scoreDataNotice" role="status" style="font-size:13px;margin:8px auto;max-width:680px">正在确认评分数据日期…</div>
   <div class="score" id="scoreBig">--<span> / 100</span></div>
   <div class="verdict" id="verdictPill">计算中</div>
 
@@ -187,7 +188,7 @@
   <div class="ai" id="aiText">正在读取数据…</div>
 
   <div class="cards">
-    <div class="mcard"><div class="t">央行 · 今日净投放</div>
+    <div class="mcard"><div class="t">央行 · 数据日净投放</div>
       <div class="v" id="cardOps">—</div><div class="d muted" id="cardOpsSub">—</div></div>
     <div class="mcard"><div class="t">DR001 隔夜</div>
       <div class="v" id="cardDr001">—</div><div class="d muted" id="cardDr001Sub">—</div></div>
@@ -791,7 +792,7 @@ function trendHtml(bp){
 
 function aiSentence(r){
   const st = r.st, v = verdictOf(r.total);
-  let s = `今天资金面${v.t}（${Math.round(r.total)}分）。`;
+  let s = `${S._dataDate || '未知日期'} 数据显示资金面${v.t}（${Math.round(r.total)}分）。`;
   s += `央行公开市场当日${st.todayNet>=0?"净投放":"净回笼"}${Math.abs(st.todayNet).toLocaleString()}亿元`;
   if(st.streak>1) s += `，已连续${st.streak}日${st.sign>0?"净投放":"净回笼"}`;
   s += "。";
@@ -1086,6 +1087,11 @@ function renderToggle(){
 
 function renderAll(){
   const r = computeScore();
+  const scoreNotice = document.getElementById("scoreDataNotice");
+  scoreNotice.textContent = `评分数据日期：${S._dataDate || '未知'}。` + (dataIsFresh()
+    ? "已录入当日流动性数据。"
+    : "尚未更新为今天：央行操作与资金利率仍需核对录入。当前为历史快照评分，不代表今天的资金面；成交额更新不会更新该评分。");
+  scoreNotice.style.color = dataIsFresh() ? "#667085" : "#b45309";
   document.getElementById("dataDate").textContent = S._dataDate || "2026-11-06";
   const notice = document.getElementById("snapshotNotice");
   notice.textContent = `成交额快照：${S.market.date}。` + (dataIsFresh()
