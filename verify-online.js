@@ -31,8 +31,9 @@ function load(seed, patchedCode) {
     querySelector(){ return el(); }, querySelectorAll(){ return []; },
     insertAdjacentHTML(){}, getContext(){ return {}; }, classList:{add(){},remove(){}}
   });
+  const elements = {};
   const document = {
-    getElementById: () => el(), createElement: () => el(), head: el(), body: el(),
+    getElementById: id => elements[id] || (elements[id] = el()), createElement: () => el(), head: el(), body: el(),
     querySelector: () => el(), querySelectorAll: () => [], addEventListener(){}
   };
   /* 把「今天」固定为数据快照日：归档闸门依赖日期匹配，测试不能随运行日期漂移 */
@@ -52,7 +53,7 @@ function load(seed, patchedCode) {
   const bridge = ';globalThis.__test = { get S(){return S;}, set S(v){S=v;}, '
                + 'msKey: d => msKey(d), get sig(){return S._dataSig;} };';
   vm.runInContext((patchedCode || code) + '\n' + bridge, ctx, { filename: 'online.inline.js' });
-  return { ctx, LS, api: ctx.__test };
+  return { ctx, LS, api: ctx.__test, elements };
 }
 
 let pass = 0, fail = 0;
@@ -144,10 +145,39 @@ check('切口径后两条历史并存、不互相覆盖',
   histToday.some(h => (h.mode || 'v0') === 'v0') && histToday.some(h => h.mode === 'price'),
   'n=' + histToday.length + ' keys=' + histToday.map(h => e.api.msKey(h)).join(','));
 
-console.log('\n结果：' + pass + ' 通过 / ' + fail + ' 失败');
 const scoped = load({'pboc_thermo_schema':'2'});
 scoped.LS['pboc_market_stats'] = JSON.stringify([{date:D.date,mode:'v0',method:D.collection?.method||'legacy',shPct:1.23,fundNet:45}]);
 scoped.ctx.archiveMarket();
 check('同日已取得行情不被缺失值覆盖（固定非空样本）', scoped.ctx.getMarketStats().some(s=>s.date===D.date&&s.shPct===1.23&&s.fundNet===45));
 try{ scoped.ctx.renderAll(); check('缺失可选R利率时页面仍能完整渲染',true); }catch(error){check('缺失可选R利率时页面仍能完整渲染',false,error.message);}
+console.log('=== 5. Issue #3：旧点可见、方法间断线、统计不混合 ===');
+const chartData=JSON.parse(JSON.stringify(D));
+chartData.collection={...(chartData.collection||{}),method:'auto-repo-v1'};
+chartData.history=[
+  {date:'2026-11-05',score:52.4,estimate:true},
+  {date:'2026-11-06',score:40.5,estimate:false},
+  {date:'2026-11-09',score:33.8,method:'auto-repo-v1'},
+  {date:'2026-11-10',score:34,method:'auto-repo-v1'},
+  {date:'2026-11-09',score:41,mode:'price',method:'auto-repo-v1'},
+  {date:'2026-11-04',score:null,estimate:true}
+];
+chartData.marketStats=[
+  {date:'2026-11-06',score:40.5,shPct:-1.14,state:'中性'},
+  {date:'2026-11-09',score:33.8,method:'auto-repo-v1',state:'偏紧',shPct:null}
+];
+const chartCode=code.replace(dataScript,'window.PBEC_DATA = '+JSON.stringify(chartData)+';');
+const chart=load({'pboc_thermo_schema':'2'},chartCode);
+const points=chart.ctx.getChartRecords();
+check('11月6日旧点恢复且与统计重复项合并',points.filter(h=>h.date==='2026-11-06').length===1);
+check('旧分数原样保留，空评分不造点',points.find(h=>h.date==='2026-11-06').score===40.5&&!points.some(h=>h.date==='2026-11-04'));
+const segments=chart.ctx.historyChartSegments(points);
+check('不同方法和回算之间不连线，同方法新记录可连线',segments.length===3&&segments[0].points.length===1&&segments[1].points.length===1&&segments[2].points.length===2);
+check('概率统计仍然排除旧口径',chart.ctx.getMarketStats().length===1&&chart.ctx.getMarketStats()[0].date==='2026-11-09');
+chart.ctx.renderStats(); chart.ctx.renderHistory();
+check('曲线和历史表均有旧口径标识',chart.elements.statChart.innerHTML.includes('旧口径')&&chart.elements.histBody.innerHTML.includes('2026-11-06')&&chart.elements.histBody.innerHTML.includes('旧口径'));
+chart.api.S.mode='price';
+check('切换价格优先不挪用旧V0分数',chart.ctx.getChartRecords().length===1&&chart.ctx.getChartRecords()[0].score===41);
+chart.ctx.archiveToday(chart.ctx.computeScore());chart.ctx.archiveMarket();
+check('新归档保留其他方法的原记录',chart.ctx.getHistory(true).some(h=>h.date==='2026-11-06'&&!h.method)&&chart.ctx.getMarketStats(true).some(h=>h.date==='2026-11-06'&&!h.method));
+console.log('\n结果：' + pass + ' 通过 / ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

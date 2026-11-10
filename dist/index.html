@@ -428,13 +428,13 @@ function dataIsFresh(){
   return d === todayStr();
 }
 const nonNull = o => Object.fromEntries(Object.entries(o||{}).filter(([,v])=> v!=null));
-function getHistory(){
+function getHistory(includeOtherMethods=false){
   let local = [];
   try{ local = JSON.parse(store.getItem(HS) || "[]"); }catch(e){}
   const map = {};
   ((window.PBEC_DATA && window.PBEC_DATA.history) || []).forEach(h=>{ map[msKey(h)] = h; });
   local.forEach(h=>{ const k = msKey(h); map[k] = {...(map[k]||{}), ...nonNull(h)}; });
-  return Object.values(map).filter(h=>(h.method||"legacy")===currentMethod()).sort((a,b)=> a.date < b.date ? 1 : -1);
+  return Object.values(map).filter(h=>includeOtherMethods||(h.method||"legacy")===currentMethod()).sort((a,b)=> a.date < b.date ? 1 : -1);
 }
 function archiveToday(r){
   if(!dataIsFresh()) return getHistory();   // 断更：不写入伪「当天」记录
@@ -448,7 +448,7 @@ function archiveToday(r){
     estimate:false,
     note:"页面自动归档的当日快照：" + aiSentence(r)
   };
-  const next = [snap, ...list.filter(h=> msKey(h) !== msKey(snap))];
+  const next = [snap, ...getHistory(true).filter(h=> msKey(h) !== msKey(snap))];
   store.setItem(HS, JSON.stringify(next));
   return next;
 }
@@ -469,7 +469,7 @@ const stateOf = s => s>=60 ? "宽松" : (s>=40 ? "中性" : "偏紧");
   }catch(e){}
 })();
 
-function getMarketStats(){
+function getMarketStats(includeOtherMethods=false){
   let local = [];
   try{ local = JSON.parse(store.getItem(MS) || "[]"); }catch(e){}
   const map = {};
@@ -478,7 +478,7 @@ function getMarketStats(){
     const k = msKey(d);
     map[k] = {...(map[k]||{}), ...nonNull(d)};   // null 不覆盖 data.js 的真值
   });
-  return Object.values(map).filter(h=>(h.method||"legacy")===currentMethod()).sort((a,b)=> a.date < b.date ? -1 : (a.date > b.date ? 1 : 0));
+  return Object.values(map).filter(h=>includeOtherMethods||(h.method||"legacy")===currentMethod()).sort((a,b)=> a.date < b.date ? -1 : (a.date > b.date ? 1 : 0));
 }
 function archiveMarket(){
   if(!dataIsFresh()) return;   // 断更：不把旧流动性分数与新行情配成样本
@@ -499,12 +499,36 @@ function archiveMarket(){
   ["shPct","szPct","fundNet","amountChg"].forEach(f=>{
     if(rec[f] == null && old[f] != null) rec[f] = old[f];   // 数据分批到达时保留已取到的值
   });
-  const list = getMarketStats().filter(x=> msKey(x) !== k);
+  const list = getMarketStats(true).filter(x=> msKey(x) !== k);
   list.push(rec);
   store.setItem(MS, JSON.stringify(list));
   renderStats();
 }
 function pctTxt(v){ return v==null ? "—" : (v>0?"+":"") + v.toFixed(2) + "%"; }
+function historyMethodLabel(record){
+  return (record.method||"legacy")===currentMethod() ? "当前口径" : "旧口径";
+}
+// Display history across methods; probability statistics still use getMarketStats().
+function getChartRecords(){
+  const records = {};
+  getHistory(true).forEach(h=>{records[msKey(h)]=h;});
+  getMarketStats(true).forEach(h=>{
+    const key=msKey(h);
+    records[key]={...(records[key]||{}),...nonNull(h)};
+  });
+  return Object.values(records)
+    .filter(h=>(h.mode||"v0")===(S.mode||"v0") && typeof h.score==="number" && Number.isFinite(h.score))
+    .sort((a,b)=>a.date.localeCompare(b.date)||(a.method||"legacy").localeCompare(b.method||"legacy"));
+}
+function historyChartSegments(records){
+  const segments=[];
+  records.forEach((record,index)=>{
+    const key=(record.method||"legacy")+"|"+Boolean(record.estimate);
+    if(!segments.length||segments[segments.length-1].key!==key) segments.push({key,points:[]});
+    segments[segments.length-1].points.push({record,index});
+  });
+  return segments;
+}
 function renderStats(){
   const list = getMarketStats().filter(d => (d.mode||"v0") === (S.mode||"v0"));
   document.getElementById("statsCount").textContent =
@@ -559,7 +583,8 @@ function renderStats(){
   // 评分曲线
   const W=900, H=180, x0=38, x1=870, y0=152, y1=16;
   const yOf = v => y0 - (Math.max(0,Math.min(100,v))/100)*(y0-y1);
-  const n = list.length;
+  const chartRecords = getChartRecords();
+  const n = chartRecords.length;
   const xOf = i => n<=1 ? (x0+x1)/2 : x0 + i*(x1-x0)/(n-1);
   const bands = [
     {a:0,b:40,c:"var(--red-bg)"}, {a:40,b:60,c:"var(--gray)"}, {a:60,b:100,c:"var(--blue-bg)"}
@@ -567,20 +592,25 @@ function renderStats(){
   const grid = [0,20,40,60,80,100].map(v=>
     `<line x1="${x0}" y1="${yOf(v)}" x2="${x1}" y2="${yOf(v)}" stroke="#e3e6eb" stroke-width="1"/>
      <text x="${x0-6}" y="${yOf(v)+3}" text-anchor="end" font-size="9" fill="#9ca3af">${v}</text>`).join("");
-  const line = n>1 ? `<polyline points="${list.map((d,i)=>xOf(i)+","+yOf(d.score)).join(" ")}"
-      fill="none" stroke="#3f4650" stroke-width="2" stroke-linejoin="round"/>` : "";
+  const line = historyChartSegments(chartRecords).filter(s=>s.points.length>1).map(s=>{
+    const old=historyMethodLabel(s.points[0].record)==="旧口径";
+    return `<polyline points="${s.points.map(p=>xOf(p.index)+","+yOf(p.record.score)).join(" ")}"
+      fill="none" stroke="${old?'#9ca3af':'#3f4650'}" ${old?'stroke-dasharray="4 4"':''} stroke-width="2" stroke-linejoin="round"/>`;
+  }).join("");
   const step = Math.max(1, Math.ceil(n/12));
-  const dots = list.map((d,i)=>{
+  const dots = chartRecords.map((d,i)=>{
     const x=xOf(i), y=yOf(d.score);
     const col = d.shPct==null ? "#9ca3af" : (d.shPct>=0 ? "var(--red)" : "var(--green)");
     const arrow = d.fundNet==null ? "" : (d.fundNet>=0 ? "↑" : "↓");
-    return `<circle cx="${x}" cy="${y}" r="4.5" fill="${col}" stroke="#fff" stroke-width="1.5"/>
-      <text x="${x}" y="${y-9}" text-anchor="middle" font-size="9" fill="#4b5563">${d.score}${arrow}</text>
-      ${i%step===0?`<text x="${x}" y="${y0+14}" text-anchor="middle" font-size="9" fill="#9ca3af">${(d.date||"").slice(5)}</text>`:""}`;
+    const old=historyMethodLabel(d)==="旧口径";
+    const label=(old?' · 旧口径':'')+(d.estimate?' · 回算':'');
+    return `<circle cx="${x}" cy="${y}" r="4.5" fill="${old?'#fff':col}" stroke="${old?'#6b7280':'#fff'}" stroke-width="1.5"><title>${d.date} ${d.score}分 · ${historyMethodLabel(d)}${d.estimate?' · 回算':''}</title></circle>
+      <text x="${x}" y="${y-9}" text-anchor="${n>1&&i===0?'start':n>1&&i===n-1?'end':'middle'}" font-size="9" fill="#4b5563">${d.score}${arrow}${label}</text>
+      ${old||i%step===0||i===n-1?`<text x="${x}" y="${y0+14}" text-anchor="middle" font-size="9" fill="#9ca3af">${(d.date||"").slice(5)}</text>`:""}`;
   }).join("");
   document.getElementById("statChart").innerHTML =
     bands + grid + line + dots +
-    `<text x="${x0}" y="${y0+30}" font-size="9" fill="#9ca3af">蓝=宽松带 · 灰=中性带 · 红=偏紧带（纵轴 0–100 分）</text>`;
+    `<text x="${x0}" y="${y0+30}" font-size="9" fill="#9ca3af">空心点=旧口径；不同口径/回算之间不连线；概率统计仅使用当前口径。</text>`;
 }
 
 /* ══════════════ 计算 ══════════════ */
@@ -953,12 +983,12 @@ window.fetchSameTime = function(){
 
 /* ── 历史回看 ── */
 function renderHistory(){
-  const list = getHistory();
-  document.getElementById("histCount").textContent = list.length + " 天记录";
+  const list = getHistory(true).filter(h=>(h.mode||"v0")===(S.mode||"v0"));
+  document.getElementById("histCount").textContent = list.length + " 条记录（含旧口径）";
   const f = (v,suf="") => v==null ? "—" : (typeof v==="number" ? v.toLocaleString("zh-CN")+suf : v);
   document.getElementById("histBody").innerHTML = list.map((h,i)=>`
     <tr data-h="${i}">
-      <td><b>${h.date}</b>${h.estimate?' <span class="muted" style="font-size:10px">回算</span>':''}</td>
+      <td><b>${h.date}</b> <span class="muted" style="font-size:10px">${historyMethodLabel(h)}${h.estimate?' · 回算':''}</span></td>
       <td><b>${h.score==null?"—":h.score}</b></td>
       <td>${h.verdict||"—"}</td>
       <td>${h.dr001==null?"—":h.dr001.toFixed(4)}</td>
@@ -973,7 +1003,7 @@ function renderHistory(){
       tr.classList.add("sel");
       const h = list[+tr.dataset.h];
       document.getElementById("histDetail").innerHTML =
-        `<b>${h.date}</b>　评分 <b>${h.score==null?"—":h.score}</b>（${h.verdict||"—"}）
+        `<b>${h.date}</b>　评分 <b>${h.score==null?"—":h.score}</b>（${h.verdict||"—"}） · ${historyMethodLabel(h)}
          ${h.estimate?"· 此分数为按当前模型回算":""}<br>${h.note||"暂无解读"}`;
     };
   });
