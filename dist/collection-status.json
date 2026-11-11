@@ -1,8 +1,10 @@
 {
-  "attemptDate": "2026-11-11",
+  "attemptDate": "2026-11-12",
   "lastScoreDate": "2026-11-11",
-  "state": "updated",
-  "missing": [],
+  "state": "waiting",
+  "missing": [
+    "当天 DR001/DR007 加权利率尚未发布；保留最近同日完整快照"
+  ],
   "latestAnnouncement": {
     "date": "2026-11-11",
     "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026111108534983582/index.html",
