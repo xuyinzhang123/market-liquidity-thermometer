@@ -1,14 +1,14 @@
 {
-  "date": "2026-11-11",
-  "rev": 2,
+  "date": "2026-11-12",
+  "rev": 1,
   "policyRate": 1.25,
   "termPremium": 10,
-  "dr001": 1.327,
-  "dr007": 1.3918,
+  "dr001": 1.3256,
+  "dr007": 1.396,
   "r001": null,
   "r007": null,
-  "chg001": 6.79,
-  "chg007": 6.76,
+  "chg001": 5.96,
+  "chg007": 7.81,
   "factors": {
     "tax": false,
     "monthEnd": false,
@@ -18,6 +18,12 @@
     "fiscal": false
   },
   "ops": [
+    {
+      "date": "2026-11-12",
+      "type": "隔夜逆回购",
+      "amt": 3840,
+      "due": 1870
+    },
     {
       "date": "2026-11-11",
       "type": "隔夜逆回购",
@@ -47,26 +53,14 @@
       "type": "7天逆回购",
       "amt": 0,
       "due": 150
-    },
-    {
-      "date": "2026-11-05",
-      "type": "隔夜逆回购",
-      "amt": 2630,
-      "due": 2575
-    },
-    {
-      "date": "2026-11-05",
-      "type": "7天逆回购",
-      "amt": 0,
-      "due": 1150
     }
   ],
   "market": {
-    "date": "2026-11-11",
-    "amount": 16762.79,
-    "prevAmount": 15048.15,
-    "prevDate": "2026-11-10",
-    "source": "2026-11-11 收盘 · 东方财富沪深指数日线成交额（自动更新；不代表流动性评分已更新）"
+    "date": "2026-11-12",
+    "amount": 19320.82,
+    "prevAmount": 16762.79,
+    "prevDate": "2026-11-11",
+    "source": "2026-11-12 收盘 · 东方财富沪深指数日线成交额（自动更新；不代表流动性评分已更新）"
   },
   "history": [
     {
@@ -185,6 +179,32 @@
       "estimate": false,
       "method": "auto-repo-v1",
       "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-11 17:00 加权利率，日终"
+    },
+    {
+      "date": "2026-11-12",
+      "mode": "v0",
+      "score": 43.72,
+      "verdict": "中性",
+      "net": 1970,
+      "spread": 4.6,
+      "dr001": 1.3256,
+      "dr007": 1.396,
+      "estimate": false,
+      "method": "auto-repo-v1",
+      "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-12 16:30 加权利率，盘中"
+    },
+    {
+      "date": "2026-11-12",
+      "mode": "price",
+      "score": 40.83,
+      "verdict": "中性",
+      "net": 1970,
+      "spread": 4.6,
+      "dr001": 1.3256,
+      "dr007": 1.396,
+      "estimate": false,
+      "method": "auto-repo-v1",
+      "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-12 16:30 加权利率，盘中"
     }
   ],
   "marketStats": [
@@ -269,13 +289,37 @@
       "fundNet": null,
       "amountChg": null,
       "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
+    },
+    {
+      "date": "2026-11-12",
+      "mode": "v0",
+      "method": "auto-repo-v1",
+      "score": 43.72,
+      "state": "中性",
+      "shPct": null,
+      "szPct": null,
+      "fundNet": null,
+      "amountChg": null,
+      "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
+    },
+    {
+      "date": "2026-11-12",
+      "mode": "price",
+      "method": "auto-repo-v1",
+      "score": 40.83,
+      "state": "中性",
+      "shPct": null,
+      "szPct": null,
+      "fundNet": null,
+      "amountChg": null,
+      "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
     }
   ],
   "collection": {
     "method": "auto-repo-v1",
-    "rateTime": "2026-11-11 17:00",
-    "ratePhase": "日终",
-    "trendBaseDate": "2026-11-04",
+    "rateTime": "2026-11-12 16:30",
+    "ratePhase": "盘中",
+    "trendBaseDate": "2026-11-05",
     "operationScope": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖",
     "factorScope": "税期14–18日、月/季末最后4个自然日为日历假设；春节、政府债和财政因素未自动判定，取中性",
     "missingOptional": [
@@ -288,6 +332,11 @@
       "operations": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/index.html"
     },
     "announcements": [
+      {
+        "date": "2026-11-12",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026111208502561107/index.html",
+        "sha256": "4398c2b553096f6b9dd4f0e18daf430c064f703a484904dfb6fcd47ba3dddf19"
+      },
       {
         "date": "2026-11-11",
         "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026111108534983582/index.html",
@@ -382,11 +431,6 @@
         "date": "2026-10-16",
         "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026101608495821786/index.html",
         "sha256": "2ab9cb40be870a1ef30cec55bb343f9ce88a80431d4a768d98e679428aa8f644"
-      },
-      {
-        "date": "2026-10-15",
-        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026101508552484698/index.html",
-        "sha256": "e8e54e5b77d55f173c2560039a0989bd56cf425bc9a9626bcb9043195ba5a45b"
       }
     ]
   }
