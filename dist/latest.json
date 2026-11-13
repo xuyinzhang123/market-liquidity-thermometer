@@ -1,14 +1,14 @@
 {
-  "date": "2026-11-12",
-  "rev": 2,
+  "date": "2026-11-13",
+  "rev": 1,
   "policyRate": 1.25,
   "termPremium": 10,
-  "dr001": 1.3256,
-  "dr007": 1.396,
+  "dr001": 1.2929,
+  "dr007": 1.3724,
   "r001": null,
   "r007": null,
-  "chg001": 5.96,
-  "chg007": 7.81,
+  "chg001": 0.43,
+  "chg007": 2.74,
   "factors": {
     "tax": false,
     "monthEnd": false,
@@ -18,6 +18,12 @@
     "fiscal": false
   },
   "ops": [
+    {
+      "date": "2026-11-13",
+      "type": "隔夜逆回购",
+      "amt": 3640,
+      "due": 3840
+    },
     {
       "date": "2026-11-12",
       "type": "隔夜逆回购",
@@ -41,18 +47,6 @@
       "type": "隔夜逆回购",
       "amt": 1820,
       "due": 2260
-    },
-    {
-      "date": "2026-11-06",
-      "type": "隔夜逆回购",
-      "amt": 2260,
-      "due": 2630
-    },
-    {
-      "date": "2026-11-06",
-      "type": "7天逆回购",
-      "amt": 0,
-      "due": 150
     }
   ],
   "market": {
@@ -205,6 +199,32 @@
       "estimate": false,
       "method": "auto-repo-v1",
       "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-12 17:00 加权利率，日终"
+    },
+    {
+      "date": "2026-11-13",
+      "mode": "v0",
+      "score": 49.27,
+      "verdict": "中性",
+      "net": -200,
+      "spread": 2.24,
+      "dr001": 1.2929,
+      "dr007": 1.3724,
+      "estimate": false,
+      "method": "auto-repo-v1",
+      "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-13 16:15 加权利率，盘中"
+    },
+    {
+      "date": "2026-11-13",
+      "mode": "price",
+      "score": 47.36,
+      "verdict": "中性",
+      "net": -200,
+      "spread": 2.24,
+      "dr001": 1.2929,
+      "dr007": 1.3724,
+      "estimate": false,
+      "method": "auto-repo-v1",
+      "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-13 16:15 加权利率，盘中"
     }
   ],
   "marketStats": [
@@ -313,13 +333,37 @@
       "fundNet": null,
       "amountChg": null,
       "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
+    },
+    {
+      "date": "2026-11-13",
+      "mode": "v0",
+      "method": "auto-repo-v1",
+      "score": 49.27,
+      "state": "中性",
+      "shPct": null,
+      "szPct": null,
+      "fundNet": null,
+      "amountChg": null,
+      "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
+    },
+    {
+      "date": "2026-11-13",
+      "mode": "price",
+      "method": "auto-repo-v1",
+      "score": 47.36,
+      "state": "中性",
+      "shPct": null,
+      "szPct": null,
+      "fundNet": null,
+      "amountChg": null,
+      "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
     }
   ],
   "collection": {
     "method": "auto-repo-v1",
-    "rateTime": "2026-11-12 17:00",
-    "ratePhase": "日终",
-    "trendBaseDate": "2026-11-05",
+    "rateTime": "2026-11-13 16:15",
+    "ratePhase": "盘中",
+    "trendBaseDate": "2026-11-06",
     "operationScope": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖",
     "factorScope": "税期14–18日、月/季末最后4个自然日为日历假设；春节、政府债和财政因素未自动判定，取中性",
     "missingOptional": [
@@ -332,6 +376,11 @@
       "operations": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/index.html"
     },
     "announcements": [
+      {
+        "date": "2026-11-13",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026111308562844801/index.html",
+        "sha256": "927b599e62a43573c7f2dbab66b966c1dd529311d5391b867f113d49dcc9fbf4"
+      },
       {
         "date": "2026-11-12",
         "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026111208502561107/index.html",
@@ -426,11 +475,6 @@
         "date": "2026-10-19",
         "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026101908495975924/index.html",
         "sha256": "e73702a3e2c1c180d370286ce044bfab20c6e899e2bb2f6150b3d4911ded53f3"
-      },
-      {
-        "date": "2026-10-16",
-        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026101608495821786/index.html",
-        "sha256": "2ab9cb40be870a1ef30cec55bb343f9ce88a80431d4a768d98e679428aa8f644"
       }
     ]
   }
