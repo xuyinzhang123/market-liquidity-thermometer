@@ -1,22 +1,20 @@
 {
   "attemptDate": "2026-11-16",
-  "lastScoreDate": "2026-11-13",
-  "state": "waiting",
-  "missing": [
-    "当天 DR001/DR007 加权利率尚未发布；保留最近同日完整快照"
-  ],
+  "lastScoreDate": "2026-11-16",
+  "state": "updated",
+  "missing": [],
   "latestAnnouncement": {
-    "date": "2026-11-13",
-    "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026111308562844801/index.html",
+    "date": "2026-11-16",
+    "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026111609020776084/index.html",
     "operations": [
       {
-        "date": "2026-11-13",
+        "date": "2026-11-16",
         "term": 1,
-        "amt": 3640.0,
+        "amt": 4600.0,
         "rate": 1.25,
-        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026111308562844801/index.html"
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026111609020776084/index.html"
       }
     ]
   },
-  "rateTime": "2026-11-13 17:00"
+  "rateTime": "2026-11-16 16:00"
 }

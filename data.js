@@ -1,17 +1,17 @@
 /* 自动采集：来源、时间、口径见 collection；不把旧数据标成当天。 */
 window.PBEC_DATA = {
-  "date": "2026-11-13",
-  "rev": 2,
+  "date": "2026-11-16",
+  "rev": 1,
   "policyRate": 1.25,
   "termPremium": 10,
-  "dr001": 1.2926,
-  "dr007": 1.3723,
+  "dr001": 1.3013,
+  "dr007": 1.3966,
   "r001": null,
   "r007": null,
-  "chg001": 0.4,
-  "chg007": 2.73,
+  "chg001": -0.87,
+  "chg007": 3.86,
   "factors": {
-    "tax": false,
+    "tax": true,
     "monthEnd": false,
     "quarter": false,
     "festival": false,
@@ -19,6 +19,12 @@ window.PBEC_DATA = {
     "fiscal": false
   },
   "ops": [
+    {
+      "date": "2026-11-16",
+      "type": "隔夜逆回购",
+      "amt": 4600.0,
+      "due": 3640.0
+    },
     {
       "date": "2026-11-13",
       "type": "隔夜逆回购",
@@ -42,12 +48,6 @@ window.PBEC_DATA = {
       "type": "隔夜逆回购",
       "amt": 1900.0,
       "due": 1820.0
-    },
-    {
-      "date": "2026-11-09",
-      "type": "隔夜逆回购",
-      "amt": 1820.0,
-      "due": 2260.0
     }
   ],
   "market": {
@@ -226,6 +226,32 @@ window.PBEC_DATA = {
       "estimate": false,
       "method": "auto-repo-v1",
       "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-13 17:00 加权利率，日终"
+    },
+    {
+      "date": "2026-11-16",
+      "mode": "v0",
+      "score": 47.23,
+      "verdict": "中性",
+      "net": 960,
+      "spread": 4.66,
+      "dr001": 1.3013,
+      "dr007": 1.3966,
+      "estimate": false,
+      "method": "auto-repo-v1",
+      "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-16 16:00 加权利率，盘中"
+    },
+    {
+      "date": "2026-11-16",
+      "mode": "price",
+      "score": 43.56,
+      "verdict": "中性",
+      "net": 960,
+      "spread": 4.66,
+      "dr001": 1.3013,
+      "dr007": 1.3966,
+      "estimate": false,
+      "method": "auto-repo-v1",
+      "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-16 16:00 加权利率，盘中"
     }
   ],
   "marketStats": [
@@ -358,13 +384,37 @@ window.PBEC_DATA = {
       "fundNet": null,
       "amountChg": null,
       "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
+    },
+    {
+      "date": "2026-11-16",
+      "mode": "v0",
+      "method": "auto-repo-v1",
+      "score": 47.23,
+      "state": "中性",
+      "shPct": null,
+      "szPct": null,
+      "fundNet": null,
+      "amountChg": null,
+      "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
+    },
+    {
+      "date": "2026-11-16",
+      "mode": "price",
+      "method": "auto-repo-v1",
+      "score": 43.56,
+      "state": "中性",
+      "shPct": null,
+      "szPct": null,
+      "fundNet": null,
+      "amountChg": null,
+      "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
     }
   ],
   "collection": {
     "method": "auto-repo-v1",
-    "rateTime": "2026-11-13 17:00",
-    "ratePhase": "日终",
-    "trendBaseDate": "2026-11-06",
+    "rateTime": "2026-11-16 16:00",
+    "ratePhase": "盘中",
+    "trendBaseDate": "2026-11-09",
     "operationScope": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖",
     "factorScope": "税期14–18日、月/季末最后4个自然日为日历假设；春节、政府债和财政因素未自动判定，取中性",
     "missingOptional": [
@@ -377,6 +427,11 @@ window.PBEC_DATA = {
       "operations": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/index.html"
     },
     "announcements": [
+      {
+        "date": "2026-11-16",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026111609020776084/index.html",
+        "sha256": "9413f756ad6336b0f4078c394a9e5eae1d4d77dda54d4d3d27b2b99892642761"
+      },
       {
         "date": "2026-11-13",
         "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026111308562844801/index.html",
@@ -471,11 +526,6 @@ window.PBEC_DATA = {
         "date": "2026-10-20",
         "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026102008563058059/index.html",
         "sha256": "87c75f1f2345287e21a05ec6390d4973d08848df20a1e6167c7b23118622fcd3"
-      },
-      {
-        "date": "2026-10-19",
-        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026101908495975924/index.html",
-        "sha256": "e73702a3e2c1c180d370286ce044bfab20c6e899e2bb2f6150b3d4911ded53f3"
       }
     ]
   }
