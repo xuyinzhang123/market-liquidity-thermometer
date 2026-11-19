@@ -1,17 +1,17 @@
 /* 自动采集：来源、时间、口径见 collection；不把旧数据标成当天。 */
 window.PBEC_DATA = {
-  "date": "2026-11-18",
-  "rev": 2,
+  "date": "2026-11-19",
+  "rev": 1,
   "policyRate": 1.25,
   "termPremium": 10,
-  "dr001": 1.2892,
-  "dr007": 1.385,
+  "dr001": 1.2554,
+  "dr007": 1.3592,
   "r001": null,
   "r007": null,
-  "chg001": -3.78,
-  "chg007": -0.68,
+  "chg001": -7.02,
+  "chg007": -3.68,
   "factors": {
-    "tax": true,
+    "tax": false,
     "monthEnd": false,
     "quarter": false,
     "festival": false,
@@ -19,6 +19,12 @@ window.PBEC_DATA = {
     "fiscal": false
   },
   "ops": [
+    {
+      "date": "2026-11-19",
+      "type": "隔夜逆回购",
+      "amt": 7675.0,
+      "due": 7002.0
+    },
     {
       "date": "2026-11-18",
       "type": "隔夜逆回购",
@@ -42,12 +48,6 @@ window.PBEC_DATA = {
       "type": "隔夜逆回购",
       "amt": 3640.0,
       "due": 3840.0
-    },
-    {
-      "date": "2026-11-12",
-      "type": "隔夜逆回购",
-      "amt": 3840.0,
-      "due": 1870.0
     }
   ],
   "market": {
@@ -304,6 +304,32 @@ window.PBEC_DATA = {
       "estimate": false,
       "method": "auto-repo-v1",
       "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-18 17:00 加权利率，日终"
+    },
+    {
+      "date": "2026-11-19",
+      "mode": "v0",
+      "score": 58.15,
+      "verdict": "中性",
+      "net": 673,
+      "spread": 0.92,
+      "dr001": 1.2554,
+      "dr007": 1.3592,
+      "estimate": false,
+      "method": "auto-repo-v1",
+      "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-19 16:45 加权利率，盘中"
+    },
+    {
+      "date": "2026-11-19",
+      "mode": "price",
+      "score": 55.39,
+      "verdict": "中性",
+      "net": 673,
+      "spread": 0.92,
+      "dr001": 1.2554,
+      "dr007": 1.3592,
+      "estimate": false,
+      "method": "auto-repo-v1",
+      "note": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖；2026-11-19 16:45 加权利率，盘中"
     }
   ],
   "marketStats": [
@@ -508,13 +534,37 @@ window.PBEC_DATA = {
       "fundNet": null,
       "amountChg": null,
       "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
+    },
+    {
+      "date": "2026-11-19",
+      "mode": "v0",
+      "method": "auto-repo-v1",
+      "score": 58.15,
+      "state": "中性",
+      "shPct": null,
+      "szPct": null,
+      "fundNet": null,
+      "amountChg": null,
+      "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
+    },
+    {
+      "date": "2026-11-19",
+      "mode": "price",
+      "method": "auto-repo-v1",
+      "score": 55.39,
+      "state": "中性",
+      "shPct": null,
+      "szPct": null,
+      "fundNet": null,
+      "amountChg": null,
+      "note": "自动评分样本；市场表现未采集，不以其他日期行情配对"
     }
   ],
   "collection": {
     "method": "auto-repo-v1",
-    "rateTime": "2026-11-18 17:00",
-    "ratePhase": "日终",
-    "trendBaseDate": "2026-11-11",
+    "rateTime": "2026-11-19 16:45",
+    "ratePhase": "盘中",
+    "trendBaseDate": "2026-11-12",
     "operationScope": "常规质押逆回购（隔夜及有公告的其他期限）；不含买断式逆回购、MLF、国库现金定存与国债买卖",
     "factorScope": "税期14–18日、月/季末最后4个自然日为日历假设；春节、政府债和财政因素未自动判定，取中性",
     "missingOptional": [
@@ -527,6 +577,11 @@ window.PBEC_DATA = {
       "operations": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/index.html"
     },
     "announcements": [
+      {
+        "date": "2026-11-19",
+        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026111908555223899/index.html",
+        "sha256": "3ab5e8fceafdd42feb7288d17b66b68c05bc7eabf9e0ccc8776603e4e1e24d06"
+      },
       {
         "date": "2026-11-18",
         "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026111808511557962/index.html",
@@ -621,11 +676,6 @@ window.PBEC_DATA = {
         "date": "2026-10-23",
         "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026102308535522110/index.html",
         "sha256": "702ee4ddf7c6f50a18aecac31dc8f2ad9afe55b8550cdeb949ada53e7bb2f043"
-      },
-      {
-        "date": "2026-10-22",
-        "url": "https://www.pbc.gov.cn/zhengcehuobisi/125207/125213/125431/125475/2026102208470683333/index.html",
-        "sha256": "49a0de055beb08abc3c0468bab4964eceeb2d4f2b5559f8006a6e6bf199f358f"
       }
     ]
   }
